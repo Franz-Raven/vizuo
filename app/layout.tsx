@@ -19,20 +19,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
+              (function () {
                 try {
-                  const theme = localStorage.getItem('theme');
-                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  const shouldBeDark = theme === 'dark' || (!theme && prefersDark);
-                  if (shouldBeDark) {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'light') {
+                    document.documentElement.classList.remove('dark');
+                  } else {
                     document.documentElement.classList.add('dark');
                   }
-                } catch (e) {}
+                } catch(e) {}
               })();
             `,
           }}
