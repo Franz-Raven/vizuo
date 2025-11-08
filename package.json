@@ -1,17 +1,21 @@
 {
-  "name": "vizuo",
-  "private": true,
-  "workspaces": ["frontend"],
-  "scripts": {
-    "dev": "npm --workspace frontend run dev",
-    "build": "npm --workspace frontend run build",
-    "start": "npm --workspace frontend run start",
-    "lint": "npm --workspace frontend run lint",
-
-    "dev:backend": "cd backend && ./gradlew bootRun",
-    "dev:all": "concurrently -k \"npm run dev:backend\" \"npm run dev\""
-  },
-  "devDependencies": {
-    "concurrently": "^9.0.0"
-  }
+    "name": "vizuo",
+    "private": true,
+    "workspaces": [
+        "frontend"
+    ],
+    "scripts": {
+        "dev": "npm --workspace frontend run dev",
+        "build": "npm --workspace frontend run build",
+        "start": "npm --workspace frontend run start",
+        "lint": "npm --workspace frontend run lint",
+        "dev:backend": "cd backend && ./gradlew bootRun",
+        "dev:all": "concurrently -k \"npm run dev:backend\" \"npm run dev\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.0.0"
+    },
+    "engines": {
+        "node": "20.x"
+    }
 }
