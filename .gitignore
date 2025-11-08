@@ -1,8 +1,3 @@
-# -------------------------
-# Root monorepo .gitignore
-# Covers: Next.js (frontend) + Spring Boot (backend)
-# -------------------------
-
 # Node / workspaces
 node_modules/
 npm-debug.log*
