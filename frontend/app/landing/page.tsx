@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Footer from "@/components/footer";
+import Background from "@/components/background";
+import BackgroundBlobs from "@/components/background-blobs"
 
 export default function Landing() {
   // Dummy images for the floating gallery
@@ -18,10 +20,8 @@ export default function Landing() {
   ];
 
   return (
-    <div className="h-screen relative overflow-hidden bg-black flex flex-col">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-radial-purple"></div>
-      <div className="absolute inset-0 bg-gradient-glow"></div>
+    <div className="relative min-h-screen bg-background text-foreground">
+      <BackgroundBlobs />
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-8 py-4">
@@ -35,14 +35,14 @@ export default function Landing() {
         </Link>
         
         <Link href="/login">
-          <Button variant="ghost" className="text-white hover:bg-white/10">
+          <Button variant="ghost" className="text-foreground hover:bg-foreground/10">
             Sign in
           </Button>
         </Link>
       </header>
 
       {/* Main content */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pb-8">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pb-8 mb-16">
         <div className="text-center max-w-6xl mx-auto mb-6">
           <h1 className="text-5xl md:text-6xl lg:text-7xl text-white mb-4 leading-tight">
             <span className="font-medium">Where Designers </span>
@@ -159,11 +159,7 @@ export default function Landing() {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <div className="relative z-10 mt-auto">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }
