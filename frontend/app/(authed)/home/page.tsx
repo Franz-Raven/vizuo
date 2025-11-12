@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BackgroundBlobs from "@/components/background-blobs"
 
 export default function HomePage() {
 //   const router = useRouter()
@@ -152,23 +153,9 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
-      {/* bg */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div 
-          className="absolute -top-140 -left-140 h-[180vh] w-[180vh] rounded-full blur-[130px] opacity-70"
-          style={{ backgroundImage: "radial-gradient(closest-side, var(--color-secondary), transparent 70%)" }} 
-        />
-        <div 
-          className="absolute -bottom-190 -right-140 h-[250vh] w-[250vh] rounded-full blur-[140px] opacity-70"
-          style={{ backgroundImage: "radial-gradient(closest-side, var(--color-primary), transparent 70%)" }} 
-        />
-      </div>
+      <BackgroundBlobs/>
 
-      {/* insert sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-16 bg-card border-r border-border flex flex-col items-center py-6 gap-4 z-40">
-      </aside>
-
-      <main className="ml-16 min-h-screen relative z-10">
+      <main className="min-h-screen relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-8">
 
           <div className="mb-8 max-w-3xl mx-auto">
