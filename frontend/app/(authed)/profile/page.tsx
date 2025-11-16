@@ -56,28 +56,6 @@ export default function ProfilePage() {
     <div className="relative min-h-screen bg-background text-foreground">
       <BackgroundBlobs />
 
-      <header className="relative z-10 flex items-center justify-between px-8 py-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-purple-200/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-purple-400/30">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-purple-300">
-              <path d="M4 4L20 20M4 20L20 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <span className="text-2xl font-bold text-white">Vizuo</span>
-        </Link>
-
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" className="text-foreground hover:bg-foreground/10">
-              Home
-            </Button>
-          </Link>
-          <Button variant="ghost" className="text-foreground hover:bg-foreground/10">
-            Settings
-          </Button>
-        </div>
-      </header>
-
       <main className="relative z-10">
         {/* cover and profile */}
         <div className="max-w-7xl mx-auto px-6 pt-8">
