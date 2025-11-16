@@ -13,8 +13,11 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(nullable = false)
+    private String password;
 
     private String avatar;
 
@@ -24,15 +27,14 @@ public class User {
     @Size(max = 500)
     private String bio;
 
-    // Constructors
     public User() {}
 
-    public User(String email, String username) {
+    public User(String email, String username, String password) {
         this.email = email;
         this.username = username;
+        this.password = password;
     }
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -41,6 +43,9 @@ public class User {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }

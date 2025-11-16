@@ -8,7 +8,7 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Vizuo — Share & Build",
   description: "Explore community-made assets and bring your ideas to life.",
 };

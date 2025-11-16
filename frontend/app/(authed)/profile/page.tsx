@@ -74,7 +74,7 @@ export default function ProfilePage() {
     }
   }
 
-  const handleImageUpload = async (file, type) => {
+  const handleImageUpload = async (file: File, type: 'avatar' | 'cover') => {
     try {
       setIsLoading(true)
       const response = await apiService.uploadImage(file, type)
@@ -88,20 +88,24 @@ export default function ProfilePage() {
       alert('Image uploaded successfully!')
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload image: ' + error.message)
+      if (error instanceof Error) {
+        alert("Failed to update image: " + error.message)
+      } else {
+        alert("Failed to update image: Unknown error")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleAvatarChange = (event) => {
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       handleImageUpload(file, 'avatar')
     }
   }
 
-  const handleCoverChange = (event) => {
+  const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       handleImageUpload(file, 'cover')
@@ -117,7 +121,11 @@ export default function ProfilePage() {
       alert('Profile updated successfully!')
     } catch (error) {
       console.error('Update error:', error)
-      alert('Failed to update profile: ' + error.message)
+      if (error instanceof Error) {
+        alert("Failed to update profile: " + error.message)
+      } else {
+        alert("Failed to update profile: Unknown error")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -133,7 +141,7 @@ export default function ProfilePage() {
       <BackgroundBlobs />
 
       <main className="relative z-10">
-{/* cover and profile */}
+        {/* cover and profile */}
         <div className="max-w-7xl mx-auto px-6 pt-8">
           <div className="relative">
             <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl shadow-purple-300/30 group">
@@ -226,7 +234,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-{/* info */}
+        {/* info */}
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-6">
           {isEditingProfile ? (
             <div className="max-w-md mx-auto space-y-4">
@@ -261,24 +269,23 @@ export default function ProfilePage() {
           )}
         </div>
 
-{/* profile tabs */}
+        {/* profile tabs */}
         <div className="flex justify-center gap-3 px-6 mb-8 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                activeTab === tab
+              className={`px-6 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === tab
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                   : "bg-card border border-border hover:border-primary/50 text-foreground"
-              }`}
+                }`}
             >
               {tab}
             </button>
           ))}
         </div>
 
-{/* content */}
+        {/* content */}
         <div className="max-w-7xl mx-auto px-6 pb-16">
           <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
             {spaceItems.map((item) => (

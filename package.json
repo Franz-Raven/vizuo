@@ -9,7 +9,7 @@
         "build": "npm --workspace frontend run build",
         "start": "npm --workspace frontend run start",
         "lint": "npm --workspace frontend run lint",
-        "dev:backend": "cd backend && ./gradlew bootRun",
+        "dev:backend": "cd backend && mvnw.cmd spring-boot:run",
         "dev:all": "concurrently -k \"npm run dev:backend\" \"npm run dev\""
     },
     "devDependencies": {
