@@ -209,10 +209,13 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     onClick={handleSaveProfile}
-                    className="bg-primary text-primary-foreground rounded-lg font-semibold px-6 hover:bg-primary/90"
+                    className="bg-primary text-primary-foreground rounded-lg font-semibold px-6 hover:bg-primary/90 relative overflow-hidden group"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Saving..." : "Save"}
+                    <span className="relative z-10">
+                      {isLoading ? "Saving..." : "Save"}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                   </Button>
                 </div>
               ) : (
@@ -254,7 +257,9 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="text-center">
-              <h1 className="text-3xl font-bold">{user.username}</h1>
+              <h1 className="text-3xl font-bold">
+                {user.username}
+              </h1>
               {user.bio && (
                 <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">{user.bio}</p>
               )}
