@@ -5,6 +5,7 @@ import Link from "next/link"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
 import { apiService } from "@/lib/api"
+import { Toaster, toast } from "sonner"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
@@ -85,10 +86,10 @@ export default function ProfilePage() {
         setEditForm(prev => ({ ...prev, coverImage: response.url }))
       }
 
-      alert('Image uploaded successfully!')
+      toast.success('Image uploaded successfully!')
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload image: ' + error.message)
+      toast.error('Failed to upload image: ' + error.message)
     } finally {
       setIsLoading(false)
     }
@@ -114,10 +115,10 @@ export default function ProfilePage() {
       const response = await apiService.updateProfile(editForm)
       setUser(response.user)
       setIsEditingProfile(false)
-      alert('Profile updated successfully!')
+      toast.success('Profile updated successfully!')
     } catch (error) {
       console.error('Update error:', error)
-      alert('Failed to update profile: ' + error.message)
+      toast.error('Failed to update profile: ' + error.message)
     } finally {
       setIsLoading(false)
     }
