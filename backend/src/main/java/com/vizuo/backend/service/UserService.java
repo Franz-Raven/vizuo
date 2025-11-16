@@ -23,7 +23,6 @@ public class UserService {
     public User updateUserProfile(Long userId, ProfileUpdateRequest request) {
         User user = getUserById(userId);
 
-        // Check username uniqueness if username is being changed
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
             if (userRepository.existsByUsernameAndIdNot(request.getUsername(), userId)) {
                 throw new RuntimeException("Username already taken");
@@ -46,17 +45,13 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public String uploadImage(MultipartFile file, String type) {
-        // For now, return a mock URL
-        // In production, you would:
-        // 1. Generate a unique filename
-        // 2. Save the file to your storage system
-        // 3. Return the public URL
-
+    public void updateUserImage(Long userId, String type, String imageUrl) {
+        User user = getUserById(userId);
         if ("avatar".equals(type)) {
-            return "https://i.pravatar.cc/150?img=" + (int)(Math.random() * 70);
-        } else {
-            return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=400&fit=crop";
+            user.setAvatar(imageUrl);
+        } else if ("cover".equals(type)) {
+            user.setCoverImage(imageUrl);
         }
+        userRepository.save(user);
     }
 }

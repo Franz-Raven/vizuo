@@ -3,6 +3,7 @@ package com.vizuo.backend.controller;
 import com.vizuo.backend.dto.ProfileUpdateRequest;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.service.UserService;
+import com.vizuo.backend.service.CloudinaryService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,16 +18,17 @@ import java.util.Map;
 public class ProfileController {
 
     private final UserService userService;
+    private final CloudinaryService cloudinaryService;
 
-    public ProfileController(UserService userService) {
+    public ProfileController(UserService userService, CloudinaryService cloudinaryService) {
         this.userService = userService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @GetMapping
-    public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getProfile() {
         try {
-            Long userId = extractUserIdFromToken(token);
-            User user = userService.getUserById(userId);
+            User user = userService.getUserById(1L);
 
             Map<String, Object> response = new HashMap<>();
             response.put("user", mapUserToResponse(user));
@@ -38,11 +40,10 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateProfile(
-            @RequestHeader("Authorization") String token,
-            @Valid @RequestBody ProfileUpdateRequest request) {
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
         try {
-            Long userId = extractUserIdFromToken(token);
+            // Using first user ID for now since no authentication yet
+            Long userId = 1L;
             User updatedUser = userService.updateUserProfile(userId, request);
 
             Map<String, Object> response = new HashMap<>();
@@ -57,25 +58,21 @@ public class ProfileController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(
-            @RequestHeader("Authorization") String token,
             @RequestParam("file") MultipartFile file,
             @RequestParam("type") String type) {
         try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
-            }
-
-            if (!file.getContentType().startsWith("image/")) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Only image files are allowed"));
-            }
-
-            if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+            if (file.getSize() > 5 * 1024 * 1024) {
                 return ResponseEntity.badRequest().body(Map.of("error", "File size must be less than 5MB"));
             }
 
-            String fileUrl = userService.uploadImage(file, type);
+            String imageUrl = cloudinaryService.uploadImage(file, type);
 
-            return ResponseEntity.ok(Map.of("url", fileUrl, "message", "File uploaded successfully"));
+            userService.updateUserImage(1L, type, imageUrl);
+
+            return ResponseEntity.ok(Map.of(
+                    "url", imageUrl,
+                    "message", "Image uploaded successfully to Cloudinary"
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -90,10 +87,5 @@ public class ProfileController {
         userMap.put("coverImage", user.getCoverImage() != null ? user.getCoverImage() : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=400&fit=crop");
         userMap.put("bio", user.getBio() != null ? user.getBio() : "");
         return userMap;
-    }
-
-    private Long extractUserIdFromToken(String token) {
-        // Extract user ID from JWT token
-        return 1L; // Mock user ID
     }
 }
