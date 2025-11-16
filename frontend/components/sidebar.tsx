@@ -92,7 +92,7 @@ export default function Sidebar() {
                       ${open ? "opacity-100 ml-3 max-w-full" : "opacity-0 ml-0 max-w-0 pointer-events-none"}`}
                 aria-hidden={!open}
               >
-                Figma
+                Vizuo
               </span>
             </button>
           </div>

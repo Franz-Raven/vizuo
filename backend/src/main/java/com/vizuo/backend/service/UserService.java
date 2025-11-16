@@ -4,7 +4,6 @@ import com.vizuo.backend.dto.ProfileUpdateRequest;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
