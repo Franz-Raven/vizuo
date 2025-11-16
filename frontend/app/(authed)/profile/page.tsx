@@ -1,20 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
+import { apiService } from "@/lib/api"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
   const [isEditingCover, setIsEditingCover] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Mock user data
-  const user = {
+  // Real user data from API
+  const [user, setUser] = useState({
     username: "Kiru",
     avatar: "https://i.pravatar.cc/150?img=12",
-    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=400&fit=crop"
-  }
+    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=400&fit=crop",
+    bio: ""
+  })
+
+  const [editForm, setEditForm] = useState({ ...user })
 
   // Mock boards/content data
   const spaceItems = [
@@ -52,6 +58,80 @@ export default function ProfilePage() {
 
   const tabs = ["Space", "Uploads", "Favorites"]
 
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true)
+      const response = await apiService.getProfile()
+      setUser(response.user)
+      setEditForm(response.user)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      // Keep mock data as fallback
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleImageUpload = async (file, type) => {
+    try {
+      setIsLoading(true)
+      const response = await apiService.uploadImage(file, type)
+
+      if (type === 'avatar') {
+        setEditForm(prev => ({ ...prev, avatar: response.url }))
+      } else {
+        setEditForm(prev => ({ ...prev, coverImage: response.url }))
+      }
+
+      // Show success message (you can replace with toast)
+      alert('Image uploaded successfully!')
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Failed to upload image: ' + error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleImageUpload(file, 'avatar')
+    }
+  }
+
+  const handleCoverChange = (event) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleImageUpload(file, 'cover')
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsLoading(true)
+      const response = await apiService.updateProfile(editForm)
+      setUser(response.user)
+      setIsEditingProfile(false)
+      alert('Profile updated successfully!')
+    } catch (error) {
+      console.error('Update error:', error)
+      alert('Failed to update profile: ' + error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditForm(user)
+    setIsEditingProfile(false)
+  }
+
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <BackgroundBlobs />
@@ -61,22 +141,37 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-6 pt-8">
           <div className="relative">
             <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl shadow-purple-300/30 group">
-              <img
-                src={user.coverImage}
-                alt="Cover"
-                className="w-full h-full object-cover"
-              />
-
-              <button
-                onClick={() => setIsEditingCover(!isEditingCover)}
-                className="absolute top-4 left-4 px-4 py-2 bg-card/80 backdrop-blur-md border border-border rounded-lg text-sm font-medium hover:bg-card transition flex items-center gap-2 opacity-0 group-hover:opacity-100 shadow-lg"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Add Cover
-              </button>
+              {isEditingProfile ? (
+                <div className="relative w-full h-full">
+                  <img
+                    src={editForm.coverImage}
+                    alt="Cover"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <label className="px-4 py-2 bg-card/80 backdrop-blur-md border border-border rounded-lg text-sm font-medium hover:bg-card transition flex items-center gap-2 cursor-pointer">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Change Cover
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleCoverChange}
+                        disabled={isLoading}
+                      />
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={user.coverImage}
+                  alt="Cover"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             <div className="flex items-end justify-center relative -mt-16">
@@ -84,28 +179,90 @@ export default function ProfilePage() {
                 <div className="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-[#A99DFF] via-[#8B7FCC] to-[#655E99] p-1 shadow-xl">
                   <div className="w-full h-full rounded-[1.75rem] overflow-hidden bg-card">
                     <img
-                      src={user.avatar}
+                      src={isEditingProfile ? editForm.avatar : user.avatar}
                       alt={user.username}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
-                <button className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-[#A99DFF] via-[#8B7FCC] to-[#655E99] rounded-full flex items-center justify-center border-3 border-background hover:opacity-90 transition shadow-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
+                {isEditingProfile && (
+                  <label className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-[#A99DFF] via-[#8B7FCC] to-[#655E99] rounded-full flex items-center justify-center border-3 border-background hover:opacity-90 transition shadow-lg cursor-pointer">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      disabled={isLoading}
+                    />
+                  </label>
+                )}
               </div>
 
-              <Button className="absolute right-0 bottom-2 bg-transparent text-primary-foreground hover:bg-primary rounded-lg font-semibold px-6 border-2 border-primary/60">
-                Edit
-              </Button>
+              {isEditingProfile ? (
+                <div className="absolute right-0 bottom-2 flex gap-2">
+                  <Button
+                    onClick={handleCancelEdit}
+                    className="bg-transparent text-primary-foreground hover:bg-primary rounded-lg font-semibold px-6 border-2 border-primary/60"
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveProfile}
+                    className="bg-primary text-primary-foreground rounded-lg font-semibold px-6 hover:bg-primary/90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="absolute right-0 bottom-2 bg-transparent text-primary-foreground hover:bg-primary rounded-lg font-semibold px-6 border-2 border-primary/60"
+                >
+                  Edit Profile
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
+        {/* Profile Info */}
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-6">
-          <h1 className="text-3xl font-bold text-center">{user.username}</h1>
+          {isEditingProfile ? (
+            <div className="max-w-md mx-auto space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Username</label>
+                <input
+                  type="text"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+                  placeholder="Enter your username"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Bio</label>
+                <textarea
+                  value={editForm.bio || ''}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Tell us about yourself..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <h1 className="text-3xl font-bold">{user.username}</h1>
+              {user.bio && (
+                <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">{user.bio}</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* profile tabs */}
