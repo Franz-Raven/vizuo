@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Header from "@/components/header"
 import BackgroundBlobs from "@/components/background-blobs"
 
 export default function HomePage() {
@@ -154,8 +155,8 @@ export default function HomePage() {
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <BackgroundBlobs/>
-
-      <main className="min-h-screen relative z-10">
+      <Header />
+      <main className="min-h-screen relative z-10 pt-16">
         <div className="max-w-7xl mx-auto px-6 py-8">
 
           <div className="mb-8 max-w-3xl mx-auto">
