@@ -12,11 +12,10 @@ export default function ProfilePage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Real user data from API
   const [user, setUser] = useState({
-    username: "Kiru",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=400&fit=crop",
+    username: "",
+    avatar: "",
+    coverImage: "",
     bio: ""
   })
 
@@ -58,7 +57,6 @@ export default function ProfilePage() {
 
   const tabs = ["Space", "Uploads", "Favorites"]
 
-  // Fetch user data on component mount
   useEffect(() => {
     fetchUserData()
   }, [])
@@ -71,7 +69,6 @@ export default function ProfilePage() {
       setEditForm(response.user)
     } catch (error) {
       console.error('Error fetching user data:', error)
-      // Keep mock data as fallback
     } finally {
       setIsLoading(false)
     }
@@ -88,7 +85,6 @@ export default function ProfilePage() {
         setEditForm(prev => ({ ...prev, coverImage: response.url }))
       }
 
-      // Show success message (you can replace with toast)
       alert('Image uploaded successfully!')
     } catch (error) {
       console.error('Upload error:', error)
@@ -137,7 +133,7 @@ export default function ProfilePage() {
       <BackgroundBlobs />
 
       <main className="relative z-10">
-        {/* cover and profile */}
+{/* cover and profile */}
         <div className="max-w-7xl mx-auto px-6 pt-8">
           <div className="relative">
             <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl shadow-purple-300/30 group">
@@ -230,7 +226,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile Info */}
+{/* info */}
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-6">
           {isEditingProfile ? (
             <div className="max-w-md mx-auto space-y-4">
@@ -265,7 +261,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* profile tabs */}
+{/* profile tabs */}
         <div className="flex justify-center gap-3 px-6 mb-8 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((tab) => (
             <button
@@ -282,7 +278,7 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* content */}
+{/* content */}
         <div className="max-w-7xl mx-auto px-6 pb-16">
           <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
             {spaceItems.map((item) => (
