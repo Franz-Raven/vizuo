@@ -83,8 +83,8 @@ public class ProfileController {
         userMap.put("id", user.getId());
         userMap.put("username", user.getUsername());
         userMap.put("email", user.getEmail());
-        userMap.put("avatar", user.getAvatar() != null ? user.getAvatar() : "https://i.pravatar.cc/150?img=12");
-        userMap.put("coverImage", user.getCoverImage() != null ? user.getCoverImage() : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&h=400&fit=crop");
+        userMap.put("avatar", user.getAvatar() != null ? user.getAvatar() : "https://i.pinimg.com/736x/9f/4c/f0/9f4cf0f24b376077a2fcdab2e85c3584.jpg");
+        userMap.put("coverImage", user.getCoverImage() != null ? user.getCoverImage() : "https://i.pinimg.com/1200x/45/c0/86/45c08695ac7400476965367aababdd3b.jpg");
         userMap.put("bio", user.getBio() != null ? user.getBio() : "");
         return userMap;
     }

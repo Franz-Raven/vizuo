@@ -14,8 +14,8 @@ export default function ProfilePage() {
 
   const [user, setUser] = useState({
     username: "",
-    avatar: "",
-    coverImage: "",
+    avatar: "https://i.pinimg.com/736x/9f/4c/f0/9f4cf0f24b376077a2fcdab2e85c3584.jpg",
+    coverImage: "https://i.pinimg.com/1200x/45/c0/86/45c08695ac7400476965367aababdd3b.jpg",
     bio: ""
   })
 
