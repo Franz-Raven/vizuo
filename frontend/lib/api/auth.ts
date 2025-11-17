@@ -16,6 +16,12 @@ export async function registerUser(data: { username: string; email: string; pass
 
     const result = await res.json();
     apiService.setToken(result.token);
+    
+    // Store user email for upload functionality
+    if (typeof window !== "undefined" && result.user && result.user.email) {
+        localStorage.setItem("userEmail", result.user.email);
+    }
+    
     return result;
 }
 
@@ -33,11 +39,18 @@ export async function loginUser(data: { identifier: string; password: string }) 
 
     const result = await res.json();
     apiService.setToken(result.token);
+    
+    // Store user email for upload functionality
+    if (typeof window !== "undefined" && result.user && result.user.email) {
+        localStorage.setItem("userEmail", result.user.email);
+    }
+    
     return result;
 }
 
 export function logoutUser() {
     if (typeof window !== "undefined") {
         localStorage.removeItem("authToken");
+        localStorage.removeItem("userEmail");
     }
 }

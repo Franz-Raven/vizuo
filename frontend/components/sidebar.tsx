@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Palette, Users, MessageSquare, Moon, Sun, Bell, HelpCircle } from "lucide-react"
+import { Home, Palette, Users, MessageSquare, Moon, Sun, Bell, HelpCircle, Upload } from "lucide-react"
 import React, { useEffect, useMemo, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 
@@ -46,6 +46,7 @@ export default function Sidebar() {
   const items: Item[] = useMemo(
     () => [
       { key: "home", label: "Home", href: "/home", icon: Home },
+      { key: "upload", label: "Upload", href: "/upload", icon: Upload },
       { key: "moodboard", label: "Moodboard", href: "/moodboard", icon: Palette },
       { key: "community", label: "Community", href: "/community", icon: Users },
       { key: "messages", label: "Messages", href: "/messages", icon: MessageSquare },
