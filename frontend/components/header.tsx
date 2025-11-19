@@ -18,19 +18,19 @@ export default function Header() {
 
   useEffect(() => {
     let active = true
-    ;(async () => {
-      try {
-        const res = await getProfile()
-        if (!active || !res?.user) return
-        setUser({
-          username: res.user.username,
-          email: res.user.email,
-          avatar: res.user.avatar,
-        })
-      } catch (err) {
-        console.error("Failed to load header user", err)
-      }
-    })()
+      ; (async () => {
+        try {
+          const res = await getProfile()
+          if (!active || !res?.user) return
+          setUser({
+            username: res.user.username,
+            email: res.user.email,
+            avatar: res.user.avatar,
+          })
+        } catch (err) {
+          console.error("Failed to load header user", err)
+        }
+      })()
     return () => {
       active = false
     }
@@ -46,21 +46,26 @@ export default function Header() {
   }
 
   const handleLogout = async () => {
-  try {
-    await logoutUser()
-  } catch (err) {
-    console.error("Failed to logout", err)
-  } finally {
-    setOpen(false)
-    setUser(null)
-    router.replace("/landing")
+    try {
+      await logoutUser()
+    } catch (err) {
+      console.error("Failed to logout", err)
+    } finally {
+      setOpen(false)
+      setUser(null)
+      router.replace("/landing")
+    }
   }
-}
 
   return (
-    <header className="fixed top-0 left-[var(--sidebar-width,3.5rem)] right-0 z-30 flex h-16 items-center justify-end border-b border-border bg-background px-6 backdrop-blur-xl">
+    <header
+      className="
+        fixed top-0 left-0 right-0 z-30 flex h-16 items-center justify-end
+        border-b border-border bg-background px-6 backdrop-blur-xl
+        sm:left-[var(--sidebar-width)]
+      "
+    >
       <div className="flex items-center gap-3">
-
         <button
           type="button"
           className="h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"

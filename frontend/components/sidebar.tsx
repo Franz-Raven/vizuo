@@ -1,7 +1,7 @@
 "use client"
 
 import { Home, Palette, Users, MessageSquare, Moon, Sun, Bell, HelpCircle, Upload } from "lucide-react"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 
 type Item = { key: string; label: string; href: string; icon: React.ElementType }
@@ -15,12 +15,12 @@ const IconCell = React.memo(function IconCell({ Icon }: { Icon: React.ElementTyp
 })
 
 const items: Item[] = [
-    { key: "home", label: "Home", href: "/home", icon: Home },
-    { key: "upload", label: "Upload", href: "/upload", icon: Upload },
-    { key: "moodboard", label: "Moodboard", href: "/moodboard", icon: Palette },
-    { key: "community", label: "Community", href: "/community", icon: Users },
-    { key: "messages", label: "Messages", href: "/messages", icon: MessageSquare },
-  ]
+  { key: "home", label: "Home", href: "/home", icon: Home },
+  { key: "upload", label: "Upload", href: "/upload", icon: Upload },
+  { key: "moodboard", label: "Moodboard", href: "/moodboard", icon: Palette },
+  { key: "community", label: "Community", href: "/community", icon: Users },
+  { key: "messages", label: "Messages", href: "/messages", icon: MessageSquare },
+]
 
 export default function Sidebar() {
   const router = useRouter()
@@ -31,12 +31,29 @@ export default function Sidebar() {
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-open")
     const startOpen = saved ? saved === "1" : true
-    setOpen(startOpen)
+    const isMobile = window.innerWidth < 640
+
+    if (isMobile) {
+      setOpen(false)
+      document.documentElement.style.setProperty("--sidebar-width", "0rem")
+    } else {
+      setOpen(startOpen)
+      document.documentElement.style.setProperty(
+        "--sidebar-width",
+        startOpen ? "14.5rem" : "4rem"
+      )
+    }
     setIsDark(document.documentElement.classList.contains("dark"))
-    document.documentElement.style.setProperty("--sidebar-width", startOpen ? "14.5rem" : "4rem")
   }, [])
 
   useEffect(() => {
+    const isMobile = window.innerWidth < 640
+
+    if (isMobile) {
+      document.documentElement.style.setProperty("--sidebar-width", "0rem")
+      return
+    }
+
     localStorage.setItem("sidebar-open", open ? "1" : "0")
     document.documentElement.style.setProperty("--sidebar-width", open ? "14.5rem" : "4rem")
   }, [open])
@@ -55,8 +72,12 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? "w-58" : "w-16"
-        }`}
+      className={`
+        fixed left-0 top-0 z-40 h-screen bg-background border-r border-border 
+        transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+        ${open ? "w-58" : "w-16"} 
+        hidden sm:block
+      `}
       aria-label="Sidebar"
     >
       <div className="flex h-full flex-col justify-between overflow-hidden">
