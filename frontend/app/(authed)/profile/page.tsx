@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
+import { getProfile, updateProfile, uploadImage } from "@/lib/api/profile"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
@@ -64,7 +64,7 @@ export default function ProfilePage() {
   const fetchUserData = async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.getProfile()
+      const response = await getProfile()
       setUser(response.user)
       setEditForm(response.user)
     } catch (error) {
@@ -77,7 +77,7 @@ export default function ProfilePage() {
   const handleImageUpload = async (file: File, type: 'avatar' | 'cover') => {
     try {
       setIsLoading(true)
-      const response = await apiService.uploadImage(file, type)
+      const response = await uploadImage(file, type)
 
       if (type === 'avatar') {
         setEditForm(prev => ({ ...prev, avatar: response.url }))
@@ -115,7 +115,7 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.updateProfile(editForm)
+      const response = await updateProfile(editForm)
       setUser(response.user)
       setIsEditingProfile(false)
       alert('Profile updated successfully!')

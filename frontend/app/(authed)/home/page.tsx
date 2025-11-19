@@ -6,38 +6,14 @@ import Header from "@/components/header"
 import BackgroundBlobs from "@/components/background-blobs"
 
 export default function HomePage() {
-//   const router = useRouter()
-//   const [user, setUser] = useState<string | null>(null)
-//   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-//   useEffect(() => {
-//     const token = localStorage.getItem("token")
-//     const username = localStorage.getItem("username")
-    
-//     if (!token) {
-//       // redirect to login
-//       router.push("/login")
-//     } else {
-//       setUser(username || "User")
-//       setLoading(false)
-//     }
-//   }, [router])
-
-//   const handleLogout = () => {
-//     localStorage.removeItem("token")
-//     localStorage.removeItem("username")
-//     router.push("/login")
-//   }
-
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen bg-background flex items-center justify-center">
-//         <div className="text-center">
-//           <p className="text-muted-foreground">Loading...</p>
-//         </div>
-//       </div>
-//     )
-//   }
+  useEffect(() => {
+    const token = localStorage.getItem("authToken")
+    if (!token) {
+      router.push("/landing")
+    }
+  }, [router])
 
   const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState("All")
