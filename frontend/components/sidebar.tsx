@@ -14,21 +14,19 @@ const IconCell = React.memo(function IconCell({ Icon }: { Icon: React.ElementTyp
   )
 })
 
+const items: Item[] = [
+    { key: "home", label: "Home", href: "/home", icon: Home },
+    { key: "upload", label: "Upload", href: "/upload", icon: Upload },
+    { key: "moodboard", label: "Moodboard", href: "/moodboard", icon: Palette },
+    { key: "community", label: "Community", href: "/community", icon: Users },
+    { key: "messages", label: "Messages", href: "/messages", icon: MessageSquare },
+  ]
+
 export default function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(true)
   const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem("sidebar-open")
-    setOpen(saved ? saved === "1" : true)
-    setIsDark(document.documentElement.classList.contains("dark"))
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem("sidebar-open", open ? "1" : "0")
-  }, [open])
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-open")
@@ -42,17 +40,6 @@ export default function Sidebar() {
     localStorage.setItem("sidebar-open", open ? "1" : "0")
     document.documentElement.style.setProperty("--sidebar-width", open ? "14.5rem" : "4rem")
   }, [open])
-
-  const items: Item[] = useMemo(
-    () => [
-      { key: "home", label: "Home", href: "/home", icon: Home },
-      { key: "upload", label: "Upload", href: "/upload", icon: Upload },
-      { key: "moodboard", label: "Moodboard", href: "/moodboard", icon: Palette },
-      { key: "community", label: "Community", href: "/community", icon: Users },
-      { key: "messages", label: "Messages", href: "/messages", icon: MessageSquare },
-    ],
-    []
-  )
 
   function go(href: string) {
     router.push(href)
@@ -68,7 +55,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-[width] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? "w-58" : "w-16"
+      className={`fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${open ? "w-58" : "w-16"
         }`}
       aria-label="Sidebar"
     >
@@ -77,7 +64,7 @@ export default function Sidebar() {
           <div className="mt-4 space-y-2 px-2">
             <button
               onClick={() => setOpen((v) => !v)}
-              className={`${open ? "w-full" : "w-[40px]"} h-10 rounded-xl grid items-center grid-cols-[40px_1fr] justify-center hover:bg-muted`}
+              className={`${open ? "w-full" : "w-[40px]"} h-10 rounded-xl grid items-center grid-cols-[40px_1fr] justify-items-start hover:bg-muted transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]`}
               aria-label="Toggle sidebar"
             >
               <span className={`h-10 w-10 flex items-center justify-center`}>
@@ -89,8 +76,8 @@ export default function Sidebar() {
                 </svg>
               </span>
               <span
-                className={`text-sm font-medium whitespace-nowrap overflow-hidden text-left
-                      ${open ? "opacity-100 ml-3 max-w-full" : "opacity-0 ml-0 max-w-0 pointer-events-none"}`}
+                className={`text-sm font-medium whitespace-nowrap overflow-hidden text-left transition-all duration-300 ease-in-out
+                      ${open ? "opacity-100 ml-3 max-w-[160px]" : "opacity-0 ml-0 max-w-0 pointer-events-none"}`}
                 aria-hidden={!open}
               >
                 Vizuo
@@ -106,14 +93,14 @@ export default function Sidebar() {
                 <button
                   key={item.key}
                   onClick={() => go(item.href)}
-                  className={`${open ? "w-full" : "w-[40px]"} h-10 rounded-xl grid items-center grid-cols-[40px_1fr] justify-items-start
+                  className={`${open ? "w-full" : "w-[40px]"} h-10 rounded-xl grid items-center grid-cols-[40px_1fr] justify-items-start transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
                     ${active ? "bg-muted text-foreground" : "hover:bg-muted/50"}`}
                   aria-current={active ? "page" : undefined}
                 >
                   <IconCell Icon={Icon} />
                   <span
-                    className={`text-sm font-medium whitespace-nowrap overflow-hidden text-left
-                      ${open ? "opacity-100 ml-3 max-w-full" : "opacity-0 ml-0 max-w-0 pointer-events-none"}`}
+                    className={`text-sm font-medium whitespace-nowrap overflow-hidden text-left transition-all duration-300 ease-in-out
+                      ${open ? "opacity-100 ml-3 max-w-[160px]" : "opacity-0 ml-0 max-w-0 pointer-events-none"}`}
                     aria-hidden={!open}
                   >
                     {item.label}
