@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (isAuthenticated && (pathname === "/" || pathname === "/landing")) {
+  if (isAuthenticated && isPublic(pathname)) {
     const url = req.nextUrl.clone()
     url.pathname = "/home"
     url.search = ""
