@@ -18,6 +18,7 @@
   --input: var(--border);
   --ring: var(--primary);
   --radius: 0.625rem;
+  --sidebar-width: 0rem;
   
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
@@ -242,4 +243,10 @@
 
 .image-card:hover img {
   border-color: rgba(168, 85, 247, 0.8);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --sidebar-width: 14.5rem;
+  }
 }
