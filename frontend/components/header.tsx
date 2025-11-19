@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { apiService } from "@/lib/api"
+import { getProfile } from "@/lib/api/profile"
+import { logoutUser } from "@/lib/api/auth"
 
 type HeaderUser = {
   username: string
@@ -19,7 +20,7 @@ export default function Header() {
     let active = true
     ;(async () => {
       try {
-        const res = await apiService.getProfile()
+        const res = await getProfile()
         if (!active || !res?.user) return
         setUser({
           username: res.user.username,
@@ -44,13 +45,17 @@ export default function Header() {
     router.push("/profile")
   }
 
-  const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("authToken")
-    }
+  const handleLogout = async () => {
+  try {
+    await logoutUser()
+  } catch (err) {
+    console.error("Failed to logout", err)
+  } finally {
     setOpen(false)
-    router.push("/landing")
+    setUser(null)
+    router.replace("/landing")
   }
+}
 
   return (
     <header className="fixed top-0 left-[var(--sidebar-width,3.5rem)] right-0 z-30 flex h-16 items-center justify-end border-b border-border bg-background px-6 backdrop-blur-xl">

@@ -1,56 +1,44 @@
-import { apiService } from "@/lib/api";
+// lib/api/auth.ts
+import { apiRequest } from "@/lib/api";
 
-const API_BASE_URL = "http://localhost:8080/api/auth";
+type RegisterPayload = { username: string; email: string; password: string };
+type LoginPayload = { identifier: string; password: string };
 
-export async function registerUser(data: { username: string; email: string; password: string }) {
-    const res = await fetch(`${API_BASE_URL}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
+export async function registerUser(data: RegisterPayload) {
+  const result = await apiRequest("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Registration failed");
-    }
+  if (typeof window !== "undefined" && result?.user?.email) {
+    localStorage.setItem("userEmail", result.user.email);
+  }
 
-    const result = await res.json();
-    apiService.setToken(result.token);
-    
-    // Store user email for upload functionality
-    if (typeof window !== "undefined" && result.user && result.user.email) {
-        localStorage.setItem("userEmail", result.user.email);
-    }
-    
-    return result;
+  return result;
 }
 
-export async function loginUser(data: { identifier: string; password: string }) {
-    const res = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
+export async function loginUser(data: LoginPayload) {
+  const result = await apiRequest("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Login failed");
-    }
+  if (typeof window !== "undefined" && result?.user?.email) {
+    localStorage.setItem("userEmail", result.user.email);
+  }
 
-    const result = await res.json();
-    apiService.setToken(result.token);
-    
-    // Store user email for upload functionality
-    if (typeof window !== "undefined" && result.user && result.user.email) {
-        localStorage.setItem("userEmail", result.user.email);
-    }
-    
-    return result;
+  return result;
 }
 
-export function logoutUser() {
-    if (typeof window !== "undefined") {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userEmail");
-    }
+export async function logoutUser() {
+  try {
+    await apiRequest("/auth/logout", {
+      method: "POST",
+    });
+  } catch {
+  }
+
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("userEmail");
+  }
 }
