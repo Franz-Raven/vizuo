@@ -18,6 +18,7 @@
   --input: var(--border);
   --ring: var(--primary);
   --radius: 0.625rem;
+  --sidebar-width: 14.5rem;
   
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
