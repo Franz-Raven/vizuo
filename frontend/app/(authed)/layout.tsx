@@ -22,9 +22,6 @@ export default function AuthedLayout({ children }: { children: React.ReactNode }
           },
         }}
       />
-      <div className="ml-0 sm:ml-[var(--sidebar-width)]">
-        {children}
-      </div>
     </div>
   )
 }
