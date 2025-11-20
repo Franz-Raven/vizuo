@@ -2,9 +2,11 @@ package com.vizuo.backend.controller;
 
 import com.vizuo.backend.dto.ProfileUpdateRequest;
 import com.vizuo.backend.entity.User;
+import com.vizuo.backend.repository.UserRepository;
 import com.vizuo.backend.service.UserService;
 import com.vizuo.backend.service.CloudinaryService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,20 +21,21 @@ public class ProfileController {
 
     private final UserService userService;
     private final CloudinaryService cloudinaryService;
+    private final UserRepository userRepository;
 
-    public ProfileController(UserService userService, CloudinaryService cloudinaryService) {
+    public ProfileController(UserService userService, CloudinaryService cloudinaryService, UserRepository userRepository) {
         this.userService = userService;
         this.cloudinaryService = cloudinaryService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
-    public ResponseEntity<?> getProfile() {
+    public ResponseEntity<?> getProfile(Authentication authentication) {
         try {
-            User user = userService.getUserById(1L);
-
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
             Map<String, Object> response = new HashMap<>();
             response.put("user", mapUserToResponse(user));
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -40,16 +43,14 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody ProfileUpdateRequest request, Authentication authentication) {
         try {
-            // Using first user ID for now since no authentication yet
-            Long userId = 1L;
-            User updatedUser = userService.updateUserProfile(userId, request);
-
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+            User updatedUser = userService.updateUserProfile(currentUser.getId(), request);
             Map<String, Object> response = new HashMap<>();
             response.put("user", mapUserToResponse(updatedUser));
             response.put("message", "Profile updated successfully");
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -59,15 +60,18 @@ public class ProfileController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("type") String type) {
+            @RequestParam("type") String type,
+            Authentication authentication) {
         try {
             if (file.getSize() > 5 * 1024 * 1024) {
                 return ResponseEntity.badRequest().body(Map.of("error", "File size must be less than 5MB"));
             }
 
-            String imageUrl = cloudinaryService.uploadImage(file, type);
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-            userService.updateUserImage(1L, type, imageUrl);
+            String imageUrl = cloudinaryService.uploadImage(file, type);
+            userService.updateUserImage(currentUser.getId(), type, imageUrl);
 
             return ResponseEntity.ok(Map.of(
                     "url", imageUrl,
