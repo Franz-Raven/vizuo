@@ -1,11 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
-import { Toaster, toast } from "sonner"
+import { toast } from "sonner"
 import { getProfile, updateProfile, uploadImage } from "@/lib/api/profile"
 
 export default function ProfilePage() {

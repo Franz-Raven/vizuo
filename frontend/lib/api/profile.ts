@@ -1,4 +1,4 @@
-// lib/api/profile.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiRequest } from "@/lib/api";
 
 export async function getProfile() {
