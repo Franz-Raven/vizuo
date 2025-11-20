@@ -4,6 +4,8 @@ import { useState, useRef, KeyboardEvent, ChangeEvent, useEffect, ClipboardEvent
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import BackgroundBlobs from "@/components/background-blobs"
+import { getProfile } from "@/lib/api/profile"
+import { uploadImage } from "@/lib/api/upload"
 
 type FileItem = {
   id: string
@@ -15,20 +17,40 @@ export default function UploadPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewFileInputRef = useRef<HTMLInputElement>(null)
-  
+
   const [files, setFiles] = useState<FileItem[]>([])
   const [currentFileId, setCurrentFileId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
-  
+
   // Batch upload metadata
   const [fileName, setFileName] = useState("")
   const [description, setDescription] = useState("")
   const [keywords, setKeywords] = useState<string[]>([])
   const [keywordInput, setKeywordInput] = useState("")
 
+  const [user, setUser] = useState({
+    username: "",
+    email: "",
+  })
+
   useEffect(() => {
-    // Enable paste functionality
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      setUploading(true)
+      const response = await getProfile()
+      setUser(response.user)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  useEffect(() => {
     const handlePaste = (e: globalThis.ClipboardEvent) => {
       const items = e.clipboardData?.items
       if (!items) return
@@ -58,7 +80,7 @@ export default function UploadPage() {
     }))
 
     setFiles(prev => [...prev, ...fileItems])
-    
+
     // Select the first newly added file
     if (fileItems.length > 0 && !currentFileId) {
       setCurrentFileId(fileItems[0].id)
@@ -104,14 +126,14 @@ export default function UploadPage() {
       if (fileToRemove) {
         URL.revokeObjectURL(fileToRemove.previewUrl)
       }
-      
+
       // If removing current file, select another
       if (currentFileId === id && filtered.length > 0) {
         setCurrentFileId(filtered[0].id)
       } else if (filtered.length === 0) {
         setCurrentFileId(null)
       }
-      
+
       return filtered
     })
   }
@@ -144,73 +166,12 @@ export default function UploadPage() {
       return
     }
 
-    setUploading(true)
-    
     try {
-      const token = localStorage.getItem("authToken")
-      if (!token) {
-        alert("Please login first")
-        router.push("/login")
-        return
-      }
-
-      // Get user email from localStorage or fetch from profile
-      let userEmail = localStorage.getItem("userEmail")
-      if (!userEmail) {
-        try {
-          const profileResponse = await fetch("http://localhost:8080/api/profile", {
-            headers: { "Authorization": `Bearer ${token}` }
-          })
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json()
-            userEmail = profileData.user?.email
-            if (userEmail) {
-              localStorage.setItem("userEmail", userEmail)
-            }
-          }
-        } catch (err) {
-          console.error("Failed to fetch profile:", err)
-        }
-      }
-      
-      if (!userEmail) {
-        alert("User session expired. Please login again.")
-        router.push("/login")
-        return
-      }
-
-      const formData = new FormData()
-      formData.append("email", userEmail)
-      
-      // Add metadata
-      if (fileName) formData.append("fileName", fileName)
-      if (description) formData.append("description", description)
-      if (keywords.length > 0) formData.append("keywords", keywords.join(","))
-      
-      // Add preview files
-      files.forEach(fileItem => {
-        formData.append("previewFiles", fileItem.file)
-      })
-      
-      // Add attachment files
-      attachedFiles.forEach(file => {
-        formData.append("attachmentFiles", file)
-      })
-
-      const response = await fetch("http://localhost:8080/api/images/upload", {
-        method: "POST",
-        body: formData
-      })
-
-      if (response.ok) {
-        alert("Upload successful!")
-        // Clean up URLs
-        files.forEach(f => URL.revokeObjectURL(f.previewUrl))
-        router.push("/home")
-      } else {
-        const error = await response.text()
-        alert("Upload failed: " + error)
-      }
+      setUploading(true)
+      await uploadImage(user.email, files, attachedFiles, description, keywords, fileName)
+      alert("Upload successful!")
+      files.forEach(f => URL.revokeObjectURL(f.previewUrl))
+      router.push("/home")
     } catch (error) {
       console.error("Upload error:", error)
       alert("Upload failed: " + error)
@@ -228,17 +189,17 @@ export default function UploadPage() {
     <div className="relative min-h-screen bg-background text-foreground">
       <BackgroundBlobs />
       <Header />
-      
+
       <main className="relative z-10 min-h-screen pt-16">
         <div className="mx-auto max-w-7xl px-6 py-8">
           <h1 className="mb-8 text-3xl font-bold">Upload Image</h1>
-          
+
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Left Side - Image Preview Grid */}
             <div className="flex flex-col gap-4">
-              
+
               {/* Grid Preview */}
-              <div 
+              <div
                 className="relative rounded-2xl border-2 border-dashed border-border bg-card/50 backdrop-blur-sm p-6 min-h-[500px]"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
@@ -261,7 +222,7 @@ export default function UploadPage() {
                         />
                       </svg>
                     </div>
-                    
+
                     {/* Upload Image Button with opacity */}
                     <button
                       type="button"
@@ -294,11 +255,10 @@ export default function UploadPage() {
                       <div
                         key={fileItem.id}
                         onClick={() => setCurrentFileId(fileItem.id)}
-                        className={`relative aspect-square rounded-xl border-2 cursor-pointer transition overflow-hidden ${
-                          currentFileId === fileItem.id
-                            ? 'border-primary ring-2 ring-primary/20'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                        className={`relative aspect-square rounded-xl border-2 cursor-pointer transition overflow-hidden ${currentFileId === fileItem.id
+                          ? 'border-primary ring-2 ring-primary/20'
+                          : 'border-border hover:border-primary/50'
+                          }`}
                       >
                         <img
                           src={fileItem.previewUrl}
@@ -328,7 +288,7 @@ export default function UploadPage() {
                         </button>
                       </div>
                     ))}
-                    
+
                     {/* Upload Image Button for preview grid */}
                     <button
                       type="button"
@@ -356,7 +316,7 @@ export default function UploadPage() {
                     </button>
                   </div>
                 )}
-                
+
                 {/* Hidden file input for preview uploads - outside conditional */}
                 <input
                   ref={previewFileInputRef}
@@ -414,7 +374,7 @@ export default function UploadPage() {
                     placeholder="Type keyword and press Enter"
                     className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring transition"
                   />
-                  
+
                   {/* Keywords Display */}
                   {keywords.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
