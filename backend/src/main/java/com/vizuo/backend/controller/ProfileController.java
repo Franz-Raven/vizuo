@@ -35,10 +35,10 @@ public class ProfileController {
 
     @GetMapping
     public ResponseEntity<?> getProfile(
-            @RequestHeader(name = "Authorization", required = false) String authHeader
+            @CookieValue(name = "authToken", required = false) String token
     ) {
         try {
-            Long userId = resolveUserId(authHeader);
+            Long userId = resolveUserId(token);
             User user = userService.getUserById(userId);
 
             Map<String, Object> response = new HashMap<>();
@@ -55,11 +55,11 @@ public class ProfileController {
 
     @PutMapping
     public ResponseEntity<?> updateProfile(
-            @RequestHeader(name = "Authorization", required = false) String authHeader,
+            @CookieValue(name = "authToken", required = false) String token,
             @Valid @RequestBody ProfileUpdateRequest request
     ) {
         try {
-            Long userId = resolveUserId(authHeader);
+            Long userId = resolveUserId(token);
             User updatedUser = userService.updateUserProfile(userId, request);
 
             Map<String, Object> response = new HashMap<>();
@@ -77,7 +77,7 @@ public class ProfileController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(
-            @RequestHeader(name = "Authorization", required = false) String authHeader,
+            @CookieValue(name = "authToken", required = false) String token,
             @RequestParam("file") MultipartFile file,
             @RequestParam("type") String type
     ) {
@@ -87,7 +87,7 @@ public class ProfileController {
                         .body(Map.of("error", "File size must be less than 5MB"));
             }
 
-            Long userId = resolveUserId(authHeader);
+            Long userId = resolveUserId(token);
             String imageUrl = cloudinaryService.uploadImage(file, type);
             userService.updateUserImage(userId, type, imageUrl);
 
@@ -103,14 +103,11 @@ public class ProfileController {
         }
     }
 
-    private Long resolveUserId(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Missing or invalid Authorization header");
+    private Long resolveUserId(String token) {
+        if (token == null || token.isEmpty()) {
+            throw new IllegalArgumentException("Missing or invalid authToken cookie");
         }
-        String token = authHeader.substring(7);
 
-        // Adjust this depending on how your JwtService works:
-        // if subject is userId as string:
         String userIdStr = jwtService.extractUserId(token);
         try {
             return Long.parseLong(userIdStr);
