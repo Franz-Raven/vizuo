@@ -133,6 +133,7 @@ export default function HomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -140,6 +141,12 @@ export default function HomePage() {
       router.push("/landing");
     }
   }, [router]);
+
+   useEffect(() => {
+      const timer = setTimeout(() => setShowLoading(true), 100);
+      return () => clearTimeout(timer);
+    }, []);
+
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -187,7 +194,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          <Suspense fallback={<AssetGridLoading />}>
+          <Suspense fallback={showLoading ? <AssetGridLoading /> : null}>
             <LazyAssetGrid
               assets={MOCK_ASSETS}
               searchQuery={searchQuery}
