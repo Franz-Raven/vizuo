@@ -1,10 +1,20 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/header"
 import BackgroundBlobs from "@/components/background-blobs"
 
 export default function HomePage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken")
+    if (!token) {
+      router.push("/landing")
+    }
+  }, [router])
+
   const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState("All")
 

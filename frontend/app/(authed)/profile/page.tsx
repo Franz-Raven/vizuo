@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
+import { apiService } from "@/lib/api"
+import { Toaster, toast } from "sonner"
 import { getProfile, updateProfile, uploadImage } from "@/lib/api/profile"
 
 export default function ProfilePage() {
@@ -85,13 +87,13 @@ export default function ProfilePage() {
         setEditForm(prev => ({ ...prev, coverImage: response.url }))
       }
 
-      alert('Image uploaded successfully!')
+      toast.success('Image uploaded successfully!')
     } catch (error) {
       console.error('Upload error:', error)
       if (error instanceof Error) {
-        alert("Failed to update image: " + error.message)
+        toast.error("Failed to update image: " + error.message)
       } else {
-        alert("Failed to update image: Unknown error")
+        toast.error("Failed to update image: Unknown error")
       }
     } finally {
       setIsLoading(false)
@@ -118,13 +120,13 @@ export default function ProfilePage() {
       const response = await updateProfile(editForm)
       setUser(response.user)
       setIsEditingProfile(false)
-      alert('Profile updated successfully!')
+      toast.success('Profile updated successfully!')
     } catch (error) {
       console.error('Update error:', error)
       if (error instanceof Error) {
-        alert("Failed to update profile: " + error.message)
+        toast.error("Failed to update profile: " + error.message)
       } else {
-        alert("Failed to update profile: Unknown error")
+        toast.error("Failed to update profile: Unknown error")
       }
     } finally {
       setIsLoading(false)
@@ -141,7 +143,7 @@ export default function ProfilePage() {
       <BackgroundBlobs />
 
       <main className="relative z-10">
-        {/* cover and profile */}
+{/* cover and profile */}
         <div className="max-w-7xl mx-auto px-6 pt-8">
           <div className="relative">
             <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl shadow-purple-300/30 group">
@@ -216,10 +218,13 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     onClick={handleSaveProfile}
-                    className="bg-primary text-primary-foreground rounded-lg font-semibold px-6 hover:bg-primary/90"
+                    className="bg-primary text-primary-foreground rounded-lg font-semibold px-6 hover:bg-primary/90 relative overflow-hidden group"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Saving..." : "Save"}
+                    <span className="relative z-10">
+                      {isLoading ? "Saving..." : "Save"}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                   </Button>
                 </div>
               ) : (
@@ -234,7 +239,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* info */}
+{/* info */}
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-6">
           {isEditingProfile ? (
             <div className="max-w-md mx-auto space-y-4">
@@ -261,7 +266,9 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="text-center">
-              <h1 className="text-3xl font-bold">{user.username}</h1>
+              <h1 className="text-3xl font-bold">
+                {user.username}
+              </h1>
               {user.bio && (
                 <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">{user.bio}</p>
               )}
@@ -269,7 +276,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* profile tabs */}
+{/* profile tabs */}
         <div className="flex justify-center gap-3 px-6 mb-8 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((tab) => (
             <button
@@ -285,7 +292,7 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* content */}
+{/* content */}
         <div className="max-w-7xl mx-auto px-6 pb-16">
           <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
             {spaceItems.map((item) => (
