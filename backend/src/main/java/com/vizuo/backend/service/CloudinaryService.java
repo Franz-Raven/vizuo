@@ -22,6 +22,7 @@ public class CloudinaryService {
         System.out.println("Cloudinary service initialized");
     }
 
+    @SuppressWarnings("unchecked")
     public String uploadImage(MultipartFile file, String type) {
         try {
             if (file.isEmpty()) {
@@ -31,7 +32,7 @@ public class CloudinaryService {
             if (!file.getContentType().startsWith("image/")) {
                 throw new RuntimeException("Only image files are allowed");
             }
-
+            
             Map<String, Object> uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(

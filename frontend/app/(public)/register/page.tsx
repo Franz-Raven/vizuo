@@ -1,7 +1,46 @@
+"use client"
+
+import type { FormEvent } from "react"
+import { useState } from "react"
 import Footer from "@/components/footer"
 import BackgroundBlobs from "@/components/background-blobs"
+import { registerUser } from "@/lib/api/auth"
+import { useRouter } from "next/navigation"
 
 export default function Register() {
+    const router = useRouter()
+
+    const [username, setUsername] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
+    const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
+
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (password !== confirmPassword) {
+            setError("Passwords do not match")
+            return
+        }
+
+        setLoading(true)
+        setError("")
+
+        try {
+            await registerUser({ username, email, password })
+            router.push("/home")
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message)
+            } else {
+                setError("Failed to register")
+            }
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="relative min-h-screen bg-background text-foreground">
             <BackgroundBlobs />
@@ -17,11 +56,13 @@ export default function Register() {
                     <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
                         <h2 className="mb-6 text-center text-3xl font-extrabold">Sign Up</h2>
 
-                        <form className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="mb-1 block text-sm font-semibold">Username</label>
                                 <input
                                     type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
@@ -30,6 +71,8 @@ export default function Register() {
                                 <label className="mb-1 block text-sm font-semibold">Email</label>
                                 <input
                                     type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
@@ -38,6 +81,8 @@ export default function Register() {
                                 <label className="mb-1 block text-sm font-semibold">Password</label>
                                 <input
                                     type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
@@ -46,12 +91,20 @@ export default function Register() {
                                 <label className="mb-1 block text-sm font-semibold">Confirm Password</label>
                                 <input
                                     type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                     className="w-full rounded-xl border border-border bg-card px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
-                            <button type="submit" className="mt-4 w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-extrabold text-primary-foreground transition hover:opacity-95 focus-visible:ring-2 focus-visible:ring-ring">
-                                Create Account
+                            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="mt-4 w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-extrabold text-primary-foreground transition hover:opacity-95"
+                            >
+                                {loading ? "Creating account..." : "Create Account"}
                             </button>
 
                             <p className="mt-4 text-center text-sm">
@@ -64,6 +117,7 @@ export default function Register() {
                     </div>
                 </section>
             </main>
+
             <Footer />
         </div>
     )

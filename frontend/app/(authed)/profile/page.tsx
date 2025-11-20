@@ -6,6 +6,7 @@ import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
 import { apiService } from "@/lib/api"
 import { Toaster, toast } from "sonner"
+import { getProfile, updateProfile, uploadImage } from "@/lib/api/profile"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
@@ -65,7 +66,7 @@ export default function ProfilePage() {
   const fetchUserData = async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.getProfile()
+      const response = await getProfile()
       setUser(response.user)
       setEditForm(response.user)
     } catch (error) {
@@ -75,10 +76,10 @@ export default function ProfilePage() {
     }
   }
 
-  const handleImageUpload = async (file, type) => {
+  const handleImageUpload = async (file: File, type: 'avatar' | 'cover') => {
     try {
       setIsLoading(true)
-      const response = await apiService.uploadImage(file, type)
+      const response = await uploadImage(file, type)
 
       if (type === 'avatar') {
         setEditForm(prev => ({ ...prev, avatar: response.url }))
@@ -89,20 +90,24 @@ export default function ProfilePage() {
       toast.success('Image uploaded successfully!')
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error('Failed to upload image: ' + error.message)
+      if (error instanceof Error) {
+        toast.error("Failed to update image: " + error.message)
+      } else {
+        toast.error("Failed to update image: Unknown error")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleAvatarChange = (event) => {
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       handleImageUpload(file, 'avatar')
     }
   }
 
-  const handleCoverChange = (event) => {
+  const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       handleImageUpload(file, 'cover')
@@ -112,13 +117,17 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     try {
       setIsLoading(true)
-      const response = await apiService.updateProfile(editForm)
+      const response = await updateProfile(editForm)
       setUser(response.user)
       setIsEditingProfile(false)
       toast.success('Profile updated successfully!')
     } catch (error) {
       console.error('Update error:', error)
-      toast.error('Failed to update profile: ' + error.message)
+      if (error instanceof Error) {
+        toast.error("Failed to update profile: " + error.message)
+      } else {
+        toast.error("Failed to update profile: Unknown error")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -273,11 +282,10 @@ export default function ProfilePage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                activeTab === tab
+              className={`px-6 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === tab
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                   : "bg-card border border-border hover:border-primary/50 text-foreground"
-              }`}
+                }`}
             >
               {tab}
             </button>
