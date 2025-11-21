@@ -7,6 +7,7 @@ import { getProfile } from "@/lib/api/profile"
 import { logoutUser } from "@/lib/api/auth"
 import { navItems } from "@/types/navigation"
 import IconCell from "@/components/ui/icon-cell"
+import PrimaryButton from "./ui/primary-button"
 
 type HeaderUser = {
   username: string
@@ -106,13 +107,8 @@ export default function Header() {
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-3">
-            <button
-              type="button"
-              className="h-9 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              Subscriptions
-            </button>
-
+            <PrimaryButton title="Subscriptions" />
+    
             <div className="relative">
               <button
                 type="button"
