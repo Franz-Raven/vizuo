@@ -8,19 +8,19 @@ public class ImageResponse {
     private String fileName;
     private String description;
     private List<String> keywords;
-    private List<String> previewUrls;
+    private String thumbnailUrl;
     private List<String> attachmentUrls;
     private LocalDateTime createdAt;
 
     public ImageResponse() {}
 
     public ImageResponse(Long id, String fileName, String description, List<String> keywords, 
-                        List<String> previewUrls, List<String> attachmentUrls, LocalDateTime createdAt) {
+                        String thumbnailUrl, List<String> attachmentUrls, LocalDateTime createdAt) {
         this.id = id;
         this.fileName = fileName;
         this.description = description;
         this.keywords = keywords;
-        this.previewUrls = previewUrls;
+        this.thumbnailUrl = thumbnailUrl;
         this.attachmentUrls = attachmentUrls;
         this.createdAt = createdAt;
     }
@@ -37,8 +37,8 @@ public class ImageResponse {
     public List<String> getKeywords() { return keywords; }
     public void setKeywords(List<String> keywords) { this.keywords = keywords; }
 
-    public List<String> getPreviewUrls() { return previewUrls; }
-    public void setPreviewUrls(List<String> previewUrls) { this.previewUrls = previewUrls; }
+    public String getThumbnailUrl() { return thumbnailUrl; }
+    public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
     public List<String> getAttachmentUrls() { return attachmentUrls; }
     public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }

@@ -33,19 +33,16 @@ public class ImageService {
         Image image = new Image(user, fileName, description);
         image.setKeywords(keywords != null ? keywords : new ArrayList<>());
 
-        // Upload preview images to Cloudinary
-        List<String> previewUrls = new ArrayList<>();
+        // Upload thumbnail (first preview file)
+        String thumbnailUrl = null;
         if (previewFiles != null && !previewFiles.isEmpty()) {
-            for (MultipartFile file : previewFiles) {
-                try {
-                    String url = cloudinaryService.uploadImage(file, "previews");
-                    previewUrls.add(url);
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to upload preview image: " + e.getMessage());
-                }
+            try {
+                thumbnailUrl = cloudinaryService.uploadImage(previewFiles.get(0), "thumbnails");
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload thumbnail: " + e.getMessage());
             }
         }
-        image.setPreviewUrls(previewUrls);
+        image.setThumbnailUrl(thumbnailUrl);
 
         // Upload attachment files to Cloudinary
         List<String> attachmentUrls = new ArrayList<>();
@@ -68,7 +65,7 @@ public class ImageService {
             savedImage.getFileName(),
             savedImage.getDescription(),
             savedImage.getKeywords(),
-            savedImage.getPreviewUrls(),
+            savedImage.getThumbnailUrl(),
             savedImage.getAttachmentUrls(),
             savedImage.getCreatedAt()
         );
@@ -87,7 +84,7 @@ public class ImageService {
                 image.getFileName(),
                 image.getDescription(),
                 image.getKeywords(),
-                image.getPreviewUrls(),
+                image.getThumbnailUrl(),
                 image.getAttachmentUrls(),
                 image.getCreatedAt()
             ));
@@ -105,7 +102,7 @@ public class ImageService {
             image.getFileName(),
             image.getDescription(),
             image.getKeywords(),
-            image.getPreviewUrls(),
+            image.getThumbnailUrl(),
             image.getAttachmentUrls(),
             image.getCreatedAt()
         );
