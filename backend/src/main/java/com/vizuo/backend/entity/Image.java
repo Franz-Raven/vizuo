@@ -27,10 +27,8 @@ public class Image {
     @Column(name = "keyword")
     private List<String> keywords = new ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "image_previews", joinColumns = @JoinColumn(name = "image_id"))
-    @Column(name = "preview_url")
-    private List<String> previewUrls = new ArrayList<>();
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 
     @ElementCollection
     @CollectionTable(name = "image_attachments", joinColumns = @JoinColumn(name = "image_id"))
@@ -69,8 +67,8 @@ public class Image {
     public List<String> getKeywords() { return keywords; }
     public void setKeywords(List<String> keywords) { this.keywords = keywords; }
 
-    public List<String> getPreviewUrls() { return previewUrls; }
-    public void setPreviewUrls(List<String> previewUrls) { this.previewUrls = previewUrls; }
+    public String getThumbnailUrl() { return thumbnailUrl; }
+    public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
     public List<String> getAttachmentUrls() { return attachmentUrls; }
     public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }
