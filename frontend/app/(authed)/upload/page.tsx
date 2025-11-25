@@ -4,7 +4,6 @@ import { useState, useRef, KeyboardEvent, ChangeEvent, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import BackgroundBlobs from "@/components/background-blobs"
-import { getProfile } from "@/lib/api/profile"
 
 export default function UploadPage() {
   const router = useRouter()
@@ -25,23 +24,13 @@ export default function UploadPage() {
   const [keywords, setKeywords] = useState<string[]>([])
   const [keywordInput, setKeywordInput] = useState("")
 
-  const [user, setUser] = useState({
-    username: "",
-    email: "",
-  })
+  const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
-    fetchUserData()
+    // Get email from localStorage (fallback for client-side)
+    const email = localStorage.getItem("userEmail") || ""
+    setUserEmail(email)
   }, [])
-
-  const fetchUserData = async () => {
-    try {
-      const response = await getProfile()
-      setUser(response.user)
-    } catch (error) {
-      console.error('Error fetching user data:', error)
-    }
-  }
 
   const showNotification = (message: string, type: 'error' | 'info' = 'info') => {
     setNotification({ message, type })
@@ -127,7 +116,7 @@ export default function UploadPage() {
       setUploadProgress(0)
       
       const formData = new FormData()
-      formData.append("email", user.email)
+      formData.append("email", userEmail)
       formData.append("fileName", fileName)
       formData.append("description", description)
       formData.append("keywords", keywords.join(","))
@@ -502,7 +491,9 @@ export default function UploadPage() {
                 {uploading && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold">Uploading...</span>
+                      <span className="font-semibold">
+                        {uploadProgress === 100 ? "Processing..." : "Uploading..."}
+                      </span>
                       <span className="text-muted-foreground">{uploadProgress}%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -511,6 +502,11 @@ export default function UploadPage() {
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
+                    {uploadProgress === 100 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        Server is processing your files...
+                      </p>
+                    )}
                   </div>
                 )}
 
