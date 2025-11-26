@@ -1,110 +1,12 @@
-"use client"
+"use client";
 
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/header"
-import BackgroundBlobs from "@/components/background-blobs"
+import Header from "@/components/header";
+import BackgroundBlobs from "@/components/background-blobs";
+import { getHomeAssets } from "@/lib/api/home";
 
 const LazyAssetGrid = lazy(() => import('@/components/assetgrid'));
-
-const MOCK_ASSETS = [
-  {
-    id: 1,
-    type: "image",
-    title: "Spiderpunk",
-    creator: "designer_alex",
-    likes: 142,
-    image: "https://i.pinimg.com/736x/0b/cc/6e/0bcc6ec00b417c9ee1f0be258e018fbb.jpg"
-  },
-  {
-    id: 2,
-    type: "image",
-    title: "Cyber Cat",
-    creator: "urban_shots",
-    likes: 89,
-    image: "https://i.pinimg.com/1200x/38/ed/fa/38edfa3d653bfd96611e202ebc9c3d8d.jpg"
-  },
-  {
-    id: 3,
-    type: "image",
-    title: "Smashing Pumpkins",
-    creator: "spray_artist",
-    likes: 256,
-    image: "https://i.pinimg.com/736x/7a/52/f8/7a52f89bc4b4598fe50d7a749110c853.jpg"
-  },
-  {
-    id: 4,
-    type: "image",
-    title: "Spiderman",
-    creator: "city_creator",
-    likes: 178,
-    image: "https://i.pinimg.com/736x/2b/76/fb/2b76fb6008c1b5e2841c156a50b90d4a.jpg"
-  },
-  {
-    id: 5,
-    type: "image",
-    title: "Vintage Car",
-    creator: "Astronaut",
-    likes: 321,
-    image: "https://i.pinimg.com/736x/42/91/ec/4291ecdf87037abc45712311f89e236d.jpg"
-  },
-  {
-    id: 6,
-    type: "image",
-    title: "Soda Cat",
-    creator: "sound_visuals",
-    likes: 94,
-    image: "https://i.pinimg.com/1200x/0c/e2/7f/0ce27f9fd5acd5a500e8458746bb4e2c.jpg"
-  },
-  {
-    id: 7,
-    type: "image",
-    title: "Eziokwu",
-    creator: "abstract_mind",
-    likes: 203,
-    image: "https://i.pinimg.com/1200x/71/9f/98/719f98be467f2760a075a3434cf335ff.jpg"
-  },
-  {
-    id: 8,
-    type: "image",
-    title: "Ambush!",
-    creator: "portrait_pro",
-    likes: 167,
-    image: "https://i.pinimg.com/1200x/0b/aa/9f/0baa9fd7ebcbe9e07440ef21655e0351.jpg"
-  },
-  {
-    id: 9,
-    type: "image",
-    title: "Graffiti",
-    creator: "skate_culture",
-    likes: 145,
-    image: "https://i.pinimg.com/1200x/14/0c/10/140c10b2be92ae092f683cb715b2542b.jpg"
-  },
-  {
-    id: 10,
-    type: "image",
-    title: "5 Seconds of Summer",
-    creator: "luke_is_a_penguin",
-    likes: 278,
-    image: "https://i.pinimg.com/1200x/4c/db/ad/4cdbad0c03f75842d9b611c95ed00495.jpg"
-  },
-  {
-    id: 11,
-    type: "image",
-    title: "Brooklyn99",
-    creator: "jacobb_",
-    likes: 192,
-    image: "https://i.pinimg.com/1200x/91/3a/01/913a01c804137bc1fb973a35a2fad185.jpg"
-  },
-  {
-    id: 12,
-    type: "image",
-    title: "Street Style",
-    creator: "fashion_lens",
-    likes: 134,
-    image: "https://i.pinimg.com/1200x/eb/20/a5/eb20a5a64b4791f1b7c18fe1b7e37a89.jpg"
-  },
-];
 
 const CATEGORIES = [
   "All",
@@ -116,24 +18,12 @@ const CATEGORIES = [
   "Icons"
 ];
 
-const AssetGridLoading = () => (
-  <div className="flex justify-center">
-    <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6 max-w-full">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <div
-          key={index}
-          className="break-inside-avoid rounded-xl bg-gray-200 animate-pulse h-48"
-        />
-      ))}
-    </div>
-  </div>
-);
-
 export default function HomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [showLoading, setShowLoading] = useState(false);
+  const [assets, setAssets] = useState<any[]>([]);
+  const [loadingMain, setLoadingMain] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -142,73 +32,95 @@ export default function HomePage() {
     }
   }, [router]);
 
-   useEffect(() => {
-      const timer = setTimeout(() => setShowLoading(true), 100);
-      return () => clearTimeout(timer);
-    }, []);
-
+  useEffect(() => {
+    async function fetchAssets() {
+      try {
+        const data = await getHomeAssets();
+        const mapped = data.map((item: any) => ({
+          id: item.id,
+          type: "Photos",
+          title: item.fileName || "Untitled",
+          creator: item.uploaderUsername || "Unknown",
+          likes: item.likesCount ?? 0,
+          image: item.thumbnailUrl
+        }));
+        setAssets(mapped);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingMain(false);
+      }
+    }
+    fetchAssets();
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
-      <BackgroundBlobs/>
+      <BackgroundBlobs />
       <Header />
 
-      <main className="min-h-screen relative z-10 pt-16">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      {loadingMain ? (
+        <main className="min-h-screen relative z-10 pt-16 flex justify-center items-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading your assets</p>
+          </div>
+        </main>
+      ) : (
+        <main className="min-h-screen relative z-10 pt-16">
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="mb-8 max-w-3xl mx-auto">
+              <div className="relative">
+                <svg
+                  className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search assets"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-14 pr-6 py-4 bg-card border-2 border-primary/30 rounded-xl focus:outline-none focus:border-primary transition text-foreground placeholder:text-muted-foreground shadow-lg shadow-primary/5"
+                />
+              </div>
+            </div>
 
-{/* search */}
-          <div className="mb-8 max-w-3xl mx-auto">
-            <div className="relative">
-              <svg
-                className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search assets"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-14 pr-6 py-4 bg-card border-2 border-primary/30 rounded-xl focus:outline-none focus:border-primary transition text-foreground placeholder:text-muted-foreground shadow-lg shadow-primary/5"
+            <div className="mb-8 flex justify-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${
+                    activeCategory === category
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "bg-card border border-border hover:border-primary/50 text-foreground"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            <Suspense>
+              <LazyAssetGrid
+                assets={assets}
+                searchQuery={searchQuery}
+                activeCategory={activeCategory}
               />
+            </Suspense>
+
+            <div className="text-center py-16">
+              <button className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition shadow-lg shadow-primary/20 font-semibold border border-primary/20">
+                Load More Assets
+              </button>
             </div>
           </div>
-
-{/* categories */}
-          <div className="mb-8 flex justify-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${
-                  activeCategory === category
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                    : "bg-card border border-border hover:border-primary/50 text-foreground"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          <Suspense fallback={showLoading ? <AssetGridLoading /> : null}>
-            <LazyAssetGrid
-              assets={MOCK_ASSETS}
-              searchQuery={searchQuery}
-              activeCategory={activeCategory}
-            />
-          </Suspense>
-
-          <div className="text-center py-16">
-            <button className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition shadow-lg shadow-primary/20 font-semibold border border-primary/20">
-              Load More Assets
-            </button>
-          </div>
-        </div>
-      </main>
+        </main>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ public class ImageResponse {
     private List<String> attachmentUrls;
     private LocalDateTime createdAt;
     private long likesCount;
+    private String uploaderUsername;
 
     public ImageResponse() {}
 
@@ -23,7 +24,8 @@ public class ImageResponse {
             String thumbnailUrl,
             List<String> attachmentUrls,
             LocalDateTime createdAt,
-            long likesCount
+            long likesCount,
+            String uploaderUsername
     ) {
         this.id = id;
         this.fileName = fileName;
@@ -33,6 +35,7 @@ public class ImageResponse {
         this.attachmentUrls = attachmentUrls;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
+        this.uploaderUsername = uploaderUsername;
     }
 
     public Long getId() { return id; }
@@ -58,4 +61,7 @@ public class ImageResponse {
 
     public long getLikesCount() { return likesCount; }
     public void setLikesCount(long likesCount) { this.likesCount = likesCount; }
+
+    public String getUploaderUsername() { return uploaderUsername; }
+    public void setUploaderUsername(String uploaderUsername) { this.uploaderUsername = uploaderUsername; }
 }

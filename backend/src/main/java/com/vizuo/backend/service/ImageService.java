@@ -114,7 +114,6 @@ public class ImageService {
 
     public List<ImageResponse> getFeedImages() {
         List<Image> images = imageRepository.findAll();
-
         images.removeIf(img -> img.getStatus() == null || !img.getStatus());
         images.sort(Comparator.comparing(Image::getCreatedAt).reversed());
 
@@ -128,6 +127,7 @@ public class ImageService {
 
     private ImageResponse toResponse(Image image) {
         long likesCount = likeService.getLikeCountForImage(image.getId());
+        String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
 
         return new ImageResponse(
                 image.getId(),
@@ -137,7 +137,8 @@ public class ImageService {
                 image.getThumbnailUrl(),
                 image.getAttachmentUrls(),
                 image.getCreatedAt(),
-                likesCount
+                likesCount,
+                uploaderUsername
         );
     }
 }
