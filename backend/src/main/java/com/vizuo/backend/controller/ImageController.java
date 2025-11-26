@@ -88,4 +88,14 @@ public class ImageController {
             return ResponseEntity.badRequest().body("Delete failed: " + e.getMessage());
         }
     }
+
+    @GetMapping("/feed")
+    public ResponseEntity<?> getFeedImages() {
+        try {
+            List<ImageResponse> images = imageService.getFeedImages();
+            return ResponseEntity.ok(images);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to get feed images: " + e.getMessage());
+        }
+    }
 }

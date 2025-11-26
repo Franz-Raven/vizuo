@@ -11,11 +11,20 @@ public class ImageResponse {
     private String thumbnailUrl;
     private List<String> attachmentUrls;
     private LocalDateTime createdAt;
+    private long likesCount;
 
     public ImageResponse() {}
 
-    public ImageResponse(Long id, String fileName, String description, List<String> keywords, 
-                        String thumbnailUrl, List<String> attachmentUrls, LocalDateTime createdAt) {
+    public ImageResponse(
+            Long id,
+            String fileName,
+            String description,
+            List<String> keywords,
+            String thumbnailUrl,
+            List<String> attachmentUrls,
+            LocalDateTime createdAt,
+            long likesCount
+    ) {
         this.id = id;
         this.fileName = fileName;
         this.description = description;
@@ -23,6 +32,7 @@ public class ImageResponse {
         this.thumbnailUrl = thumbnailUrl;
         this.attachmentUrls = attachmentUrls;
         this.createdAt = createdAt;
+        this.likesCount = likesCount;
     }
 
     public Long getId() { return id; }
@@ -45,4 +55,7 @@ public class ImageResponse {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public long getLikesCount() { return likesCount; }
+    public void setLikesCount(long likesCount) { this.likesCount = likesCount; }
 }

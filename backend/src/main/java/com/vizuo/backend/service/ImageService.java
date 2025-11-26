@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +29,9 @@ public class ImageService {
 
     @Autowired
     private KeywordService keywordService;
+
+    @Autowired
+    private LikeService likeService;
 
     public ImageResponse uploadImage(
             String email,
@@ -70,15 +74,7 @@ public class ImageService {
 
         Image savedImage = imageRepository.save(image);
 
-        return new ImageResponse(
-                savedImage.getId(),
-                savedImage.getFileName(),
-                savedImage.getDescription(),
-                keywordService.toNameList(savedImage.getKeywords()),
-                savedImage.getThumbnailUrl(),
-                savedImage.getAttachmentUrls(),
-                savedImage.getCreatedAt()
-        );
+        return toResponse(savedImage);
     }
 
     public List<ImageResponse> getUserImages(String email) {
@@ -89,15 +85,7 @@ public class ImageService {
         List<ImageResponse> responses = new ArrayList<>();
 
         for (Image image : images) {
-            responses.add(new ImageResponse(
-                    image.getId(),
-                    image.getFileName(),
-                    image.getDescription(),
-                    keywordService.toNameList(image.getKeywords()),
-                    image.getThumbnailUrl(),
-                    image.getAttachmentUrls(),
-                    image.getCreatedAt()
-            ));
+            responses.add(toResponse(image));
         }
 
         return responses;
@@ -107,15 +95,7 @@ public class ImageService {
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Image not found"));
 
-        return new ImageResponse(
-                image.getId(),
-                image.getFileName(),
-                image.getDescription(),
-                keywordService.toNameList(image.getKeywords()),
-                image.getThumbnailUrl(),
-                image.getAttachmentUrls(),
-                image.getCreatedAt()
-        );
+        return toResponse(image);
     }
 
     public void deleteImage(Long id, String email) {
@@ -130,5 +110,34 @@ public class ImageService {
         }
 
         imageRepository.delete(image);
+    }
+
+    public List<ImageResponse> getFeedImages() {
+        List<Image> images = imageRepository.findAll();
+
+        images.removeIf(img -> img.getStatus() == null || !img.getStatus());
+        images.sort(Comparator.comparing(Image::getCreatedAt).reversed());
+
+        List<ImageResponse> responses = new ArrayList<>();
+        for (Image image : images) {
+            responses.add(toResponse(image));
+        }
+
+        return responses;
+    }
+
+    private ImageResponse toResponse(Image image) {
+        long likesCount = likeService.getLikeCountForImage(image.getId());
+
+        return new ImageResponse(
+                image.getId(),
+                image.getFileName(),
+                image.getDescription(),
+                keywordService.toNameList(image.getKeywords()),
+                image.getThumbnailUrl(),
+                image.getAttachmentUrls(),
+                image.getCreatedAt(),
+                likesCount
+        );
     }
 }
