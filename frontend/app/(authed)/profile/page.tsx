@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
-import { Toaster, toast } from "sonner"
+import { toast } from "sonner"
 import { getProfile, updateProfile, uploadImage } from "@/lib/api/profile"
+import Header from "@/components/header"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
@@ -141,8 +140,8 @@ export default function ProfilePage() {
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <BackgroundBlobs />
-
-      <main className="relative z-10">
+      <Header />  
+      <main className="relative z-10 pt-16">
 {/* cover and profile */}
         <div className="max-w-7xl mx-auto px-6 pt-8">
           <div className="relative">

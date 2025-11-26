@@ -28,10 +28,6 @@ public class CloudinaryService {
             if (file.isEmpty()) {
                 throw new RuntimeException("File is empty");
             }
-
-            if (!file.getContentType().startsWith("image/")) {
-                throw new RuntimeException("Only image files are allowed");
-            }
             
             Map<String, Object> uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),

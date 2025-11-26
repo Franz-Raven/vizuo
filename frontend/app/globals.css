@@ -245,6 +245,12 @@
   border-color: rgba(168, 85, 247, 0.8);
 }
 
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (min-width: 640px) {
   :root {
     --sidebar-width: 14.5rem;

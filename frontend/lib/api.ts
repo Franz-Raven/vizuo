@@ -1,4 +1,4 @@
-// lib/api.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const API_BASE_URL = "http://localhost:8080/api";
 
 export async function apiRequest(
