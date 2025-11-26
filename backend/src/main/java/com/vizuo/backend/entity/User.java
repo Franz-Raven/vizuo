@@ -3,9 +3,14 @@ package com.vizuo.backend.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,14 +32,47 @@ public class User {
     @Size(max = 500)
     private String bio;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // Designer fields
+    @Column(name = "is_subscribed")
+    private Boolean isSubscribed = false;
+
+    @Column(name = "commission_rate")
+    private Double commissionRate = 0.0;
+
+    // Admin fields
+    @Column(name = "last_audit_date")
+    private LocalDateTime lastAuditDate;
+
+    @Column(name = "reports_handled")
+    private Integer reportsHandled = 0;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"), 
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
     public User() {}
 
     public User(String email, String username, String password) {
         this.email = email;
         this.username = username;
         this.password = password;
+        this.isSubscribed = false;
+        this.commissionRate = 0.0;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -55,4 +93,22 @@ public class User {
 
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
+
+    public Boolean getSubscribed() { return isSubscribed; }
+    public void setSubscribed(Boolean subscribed) { isSubscribed = subscribed; }
+
+    public Double getCommissionRate() { return commissionRate; }
+    public void setCommissionRate(Double commissionRate) { this.commissionRate = commissionRate; }
+
+    public LocalDateTime getLastAuditDate() { return lastAuditDate; }
+    public void setLastAuditDate(LocalDateTime lastAuditDate) { this.lastAuditDate = lastAuditDate; }
+
+    public Integer getReportsHandled() { return reportsHandled; }
+    public void setReportsHandled(Integer reportsHandled) { this.reportsHandled = reportsHandled; }
+
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

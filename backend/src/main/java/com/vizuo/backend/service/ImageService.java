@@ -2,6 +2,7 @@ package com.vizuo.backend.service;
 
 import com.vizuo.backend.dto.ImageResponse;
 import com.vizuo.backend.entity.Image;
+import com.vizuo.backend.entity.Keyword;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.repository.ImageRepository;
 import com.vizuo.backend.repository.UserRepository;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ImageService {
@@ -24,16 +26,25 @@ public class ImageService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
-    public ImageResponse uploadImage(String email, String fileName, String description, 
-                                    List<String> keywords, List<MultipartFile> previewFiles, 
-                                    List<MultipartFile> attachmentFiles) {
+    @Autowired
+    private KeywordService keywordService;
+
+    public ImageResponse uploadImage(
+            String email,
+            String fileName,
+            String description,
+            List<String> keywords,
+            List<MultipartFile> previewFiles,
+            List<MultipartFile> attachmentFiles
+    ) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Image image = new Image(user, fileName, description);
-        image.setKeywords(keywords != null ? keywords : new ArrayList<>());
 
-        // Upload thumbnail (first preview file)
+        Set<Keyword> keywordEntities = keywordService.resolveKeywords(keywords);
+        image.setKeywords(keywordEntities);
+
         String thumbnailUrl = null;
         if (previewFiles != null && !previewFiles.isEmpty()) {
             try {
@@ -44,7 +55,6 @@ public class ImageService {
         }
         image.setThumbnailUrl(thumbnailUrl);
 
-        // Upload attachment files to Cloudinary
         List<String> attachmentUrls = new ArrayList<>();
         if (attachmentFiles != null && !attachmentFiles.isEmpty()) {
             for (MultipartFile file : attachmentFiles) {
@@ -59,15 +69,15 @@ public class ImageService {
         image.setAttachmentUrls(attachmentUrls);
 
         Image savedImage = imageRepository.save(image);
-        
+
         return new ImageResponse(
-            savedImage.getId(),
-            savedImage.getFileName(),
-            savedImage.getDescription(),
-            savedImage.getKeywords(),
-            savedImage.getThumbnailUrl(),
-            savedImage.getAttachmentUrls(),
-            savedImage.getCreatedAt()
+                savedImage.getId(),
+                savedImage.getFileName(),
+                savedImage.getDescription(),
+                keywordService.toNameList(savedImage.getKeywords()),
+                savedImage.getThumbnailUrl(),
+                savedImage.getAttachmentUrls(),
+                savedImage.getCreatedAt()
         );
     }
 
@@ -80,13 +90,13 @@ public class ImageService {
 
         for (Image image : images) {
             responses.add(new ImageResponse(
-                image.getId(),
-                image.getFileName(),
-                image.getDescription(),
-                image.getKeywords(),
-                image.getThumbnailUrl(),
-                image.getAttachmentUrls(),
-                image.getCreatedAt()
+                    image.getId(),
+                    image.getFileName(),
+                    image.getDescription(),
+                    keywordService.toNameList(image.getKeywords()),
+                    image.getThumbnailUrl(),
+                    image.getAttachmentUrls(),
+                    image.getCreatedAt()
             ));
         }
 
@@ -98,13 +108,13 @@ public class ImageService {
                 .orElseThrow(() -> new RuntimeException("Image not found"));
 
         return new ImageResponse(
-            image.getId(),
-            image.getFileName(),
-            image.getDescription(),
-            image.getKeywords(),
-            image.getThumbnailUrl(),
-            image.getAttachmentUrls(),
-            image.getCreatedAt()
+                image.getId(),
+                image.getFileName(),
+                image.getDescription(),
+                keywordService.toNameList(image.getKeywords()),
+                image.getThumbnailUrl(),
+                image.getAttachmentUrls(),
+                image.getCreatedAt()
         );
     }
 
