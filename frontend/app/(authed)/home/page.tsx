@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
 import { getHomeAssets } from "@/lib/api/home";
+import { AssetCard } from "@/types/home";
 
 const LazyAssetGrid = lazy(() => import('@/components/assetgrid'));
 
@@ -22,7 +23,7 @@ export default function HomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [assets, setAssets] = useState<any[]>([]);
+  const [assets, setAssets] = useState<AssetCard[]>([]);
   const [loadingMain, setLoadingMain] = useState(true);
 
   useEffect(() => {
@@ -36,13 +37,13 @@ export default function HomePage() {
     async function fetchAssets() {
       try {
         const data = await getHomeAssets();
-        const mapped = data.map((item: any) => ({
+        const mapped: AssetCard[] = data.map((item) => ({
           id: item.id,
           type: "Photos",
           title: item.fileName || "Untitled",
           creator: item.uploaderUsername || "Unknown",
           likes: item.likesCount ?? 0,
-          image: item.thumbnailUrl
+          image: item.thumbnailUrl || ""
         }));
         setAssets(mapped);
       } catch (e) {
@@ -77,7 +78,12 @@ export default function HomePage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 <input
                   type="text"
