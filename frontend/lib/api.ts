@@ -1,20 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const API_BASE_URL = "http://localhost:8080/api";
 
-export async function apiRequest(
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<any> {
+): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  if (
-    !("Content-Type" in headers) &&
-    !(options.body instanceof FormData)
-  ) {
+  if (!("Content-Type" in headers) && !(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -27,7 +23,7 @@ export async function apiRequest(
   const res = await fetch(url, config);
 
   const contentType = res.headers.get("content-type") || "";
-  let data: any = null;
+  let data: unknown = null;
 
   if (contentType.includes("application/json")) {
     data = await res.json().catch(() => null);
@@ -36,14 +32,28 @@ export async function apiRequest(
   }
 
   if (!res.ok) {
+    const maybeObj =
+      typeof data === "object" && data !== null
+        ? (data as Record<string, unknown>)
+        : undefined;
+
+    const msgFromObj =
+      maybeObj && typeof maybeObj.error === "string"
+        ? maybeObj.error
+        : maybeObj && typeof maybeObj.message === "string"
+        ? maybeObj.message
+        : undefined;
+
     const msg =
-      data?.error ||
-      data?.message ||
-      (typeof data === "string" ? data : `Request failed with status ${res.status}`);
+      msgFromObj ??
+      (typeof data === "string" && data.trim().length > 0
+        ? data
+        : `Request failed with status ${res.status}`);
+
     throw new Error(msg);
   }
 
-  return data;
+  return data as T;
 }
 
 export { API_BASE_URL };
