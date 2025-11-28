@@ -1,29 +1,30 @@
-import { apiRequest } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api"
 
-type FileItem = {
-  id: string
-  file: File
-  previewUrl: string
-}
-    
-export async function uploadImage(userEmail: string, files: FileItem[], attachedFiles: File[], description?: string, keywords: string[] = [], fileName?: string) {
-    const formData = new FormData()
-    formData.append("email", userEmail)
+export async function uploadAsset(formData: FormData, onProgress?: (percent: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
 
-    if (fileName) formData.append("fileName", fileName)
-    if (description) formData.append("description", description)
-    if (keywords.length > 0) formData.append("keywords", keywords.join(","))
-
-    files.forEach(fileItem => {
-        formData.append("previewFiles", fileItem.file)
+    xhr.upload.addEventListener("progress", event => {
+      if (event.lengthComputable && onProgress) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100)
+        onProgress(percentComplete)
+      }
     })
 
-    attachedFiles.forEach(file => {
-        formData.append("attachmentFiles", file)
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve()
+      } else {
+        reject(new Error(`Upload failed with status ${xhr.status}`))
+      }
     })
 
-    return apiRequest("/images/upload", {
-        method: "POST",
-        body: formData,
-    });
+    xhr.addEventListener("error", () => {
+      reject(new Error("Network error occurred"))
+    })
+
+    xhr.open("POST", `${API_BASE_URL}/images/upload`)
+    xhr.withCredentials = true
+    xhr.send(formData)
+  })
 }
