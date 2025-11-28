@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
 import { getHomeAssets } from "@/lib/api/home";
-import { AssetCard } from "@/types/home";
+import { likeAsset, unlikeAsset } from "@/lib/api/like";
+import { Asset } from "@/types/asset";
 
-const LazyAssetGrid = lazy(() => import('@/components/assetgrid'));
+const LazyAssetGrid = lazy(() => import("@/components/assetgrid"));
 
 const CATEGORIES = [
   "All",
@@ -23,7 +24,7 @@ export default function HomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [assets, setAssets] = useState<AssetCard[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [loadingMain, setLoadingMain] = useState(true);
 
   useEffect(() => {
@@ -37,13 +38,14 @@ export default function HomePage() {
     async function fetchAssets() {
       try {
         const data = await getHomeAssets();
-        const mapped: AssetCard[] = data.map((item) => ({
+        const mapped: Asset[] = data.map((item: any) => ({
           id: item.id,
           type: "Photos",
           title: item.fileName || "Untitled",
           creator: item.uploaderUsername || "Unknown",
           likes: item.likesCount ?? 0,
-          image: item.thumbnailUrl || ""
+          image: item.thumbnailUrl || "",
+          isLiked: item.likedByCurrentUser ?? false
         }));
         setAssets(mapped);
       } catch (e) {
@@ -54,6 +56,41 @@ export default function HomePage() {
     }
     fetchAssets();
   }, []);
+
+  const handleToggleLike = async (id: number, currentlyLiked: boolean) => {
+    setAssets((prev) =>
+      prev.map((asset) =>
+        asset.id === id
+          ? {
+              ...asset,
+              isLiked: !currentlyLiked,
+              likes: asset.likes + (currentlyLiked ? -1 : 1)
+            }
+          : asset
+      )
+    );
+
+    try {
+      if (currentlyLiked) {
+        await unlikeAsset(id);
+      } else {
+        await likeAsset(id);
+      }
+    } catch (error) {
+      console.error(error);
+      setAssets((prev) =>
+        prev.map((asset) =>
+          asset.id === id
+            ? {
+                ...asset,
+                isLiked: currentlyLiked,
+                likes: asset.likes + (currentlyLiked ? 1 : -1)
+              }
+            : asset
+        )
+      );
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -116,6 +153,7 @@ export default function HomePage() {
                 assets={assets}
                 searchQuery={searchQuery}
                 activeCategory={activeCategory}
+                onToggleLike={handleToggleLike}
               />
             </Suspense>
 

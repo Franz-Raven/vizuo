@@ -109,17 +109,18 @@ public class ImageService {
             throw new RuntimeException("Unauthorized to delete this image");
         }
 
+        likeService.removeAllLikesForImage(image.getId());
         imageRepository.delete(image);
     }
 
-    public List<ImageResponse> getFeedImages() {
+    public List<ImageResponse> getFeedImages(Long currentUserId) {
         List<Image> images = imageRepository.findAll();
         images.removeIf(img -> img.getStatus() == null || !img.getStatus());
         images.sort(Comparator.comparing(Image::getCreatedAt).reversed());
 
         List<ImageResponse> responses = new ArrayList<>();
         for (Image image : images) {
-            responses.add(toResponse(image));
+            responses.add(toResponse(image, currentUserId));
         }
 
         return responses;
@@ -128,7 +129,7 @@ public class ImageService {
     private ImageResponse toResponse(Image image) {
         long likesCount = likeService.getLikeCountForImage(image.getId());
         String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
-
+        
         return new ImageResponse(
                 image.getId(),
                 image.getFileName(),
@@ -140,5 +141,49 @@ public class ImageService {
                 likesCount,
                 uploaderUsername
         );
+    }
+
+    private ImageResponse toResponse(Image image, Long currentUserId) {
+        long likesCount = likeService.getLikeCountForImage(image.getId());
+        String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
+        boolean likedByCurrentUser = currentUserId != null &&
+                likeService.hasUserLikedImage(image.getId(), currentUserId);
+
+        return new ImageResponse(
+                image.getId(),
+                image.getFileName(),
+                image.getDescription(),
+                keywordService.toNameList(image.getKeywords()),
+                image.getThumbnailUrl(),
+                image.getAttachmentUrls(),
+                image.getCreatedAt(),
+                likesCount,
+                uploaderUsername,
+                likedByCurrentUser
+        );
+    }
+
+    public ImageResponse likeImage(Long imageId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Image not found"));
+
+        likeService.likeImage(image, user);
+
+        return toResponse(image, user.getId());
+    }
+
+    public ImageResponse unlikeImage(Long imageId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Image not found"));
+
+        likeService.unlikeImage(image, user);
+
+        return toResponse(image, user.getId());
     }
 }

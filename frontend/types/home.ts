@@ -8,13 +8,5 @@ export interface ImageResponse {
   createdAt: string;
   likesCount: number;
   uploaderUsername: string | null;
-}
-
-export interface AssetCard {
-  id: number;
-  type: string;
-  title: string;
-  creator: string;
-  likes: number;
-  image: string;
+  likedByCurrentUser: boolean;
 }
