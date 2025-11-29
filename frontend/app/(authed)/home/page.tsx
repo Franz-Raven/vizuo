@@ -6,9 +6,12 @@ import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
 import { getHomeAssets } from "@/lib/api/home";
 import { likeAsset, unlikeAsset } from "@/lib/api/like";
+import { getSavedImages, saveImage, unsaveImage } from "@/lib/api/save-image";
 import { Asset } from "@/types/asset";
+import { ImageResponse } from "@/types/home";
+import { SavedImage } from "@/types/save-image";
 
-const LazyAssetGrid = lazy(() => import("@/components/assetgrid"));
+const LazyAssetGrid = lazy(() => import("@/components/home/assetgrid"));
 
 const CATEGORIES = [
   "All",
@@ -25,6 +28,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [savedImageIds, setSavedImageIds] = useState<number[]>([]);
   const [loadingMain, setLoadingMain] = useState(true);
 
   useEffect(() => {
@@ -35,10 +39,14 @@ export default function HomePage() {
   }, [router]);
 
   useEffect(() => {
-    async function fetchAssets() {
+    async function fetchData() {
       try {
-        const data = await getHomeAssets();
-        const mapped: Asset[] = data.map((item: any) => ({
+        const [assetsData, savedData] = await Promise.all([
+          getHomeAssets(),
+          getSavedImages()
+        ]);
+
+        const mapped: Asset[] = assetsData.map((item: ImageResponse) => ({
           id: item.id,
           type: "Photos",
           title: item.fileName || "Untitled",
@@ -47,14 +55,18 @@ export default function HomePage() {
           image: item.thumbnailUrl || "",
           isLiked: item.likedByCurrentUser ?? false
         }));
+
+        const savedIds = (savedData as SavedImage[]).map((s) => s.imageId);
+
         setAssets(mapped);
+        setSavedImageIds(savedIds);
       } catch (e) {
         console.error(e);
       } finally {
         setLoadingMain(false);
       }
     }
-    fetchAssets();
+    fetchData();
   }, []);
 
   const handleToggleLike = async (id: number, currentlyLiked: boolean) => {
@@ -88,6 +100,27 @@ export default function HomePage() {
               }
             : asset
         )
+      );
+    }
+  };
+
+  const handleToggleSave = async (imageId: number) => {
+    const isCurrentlySaved = savedImageIds.includes(imageId);
+
+    setSavedImageIds((prev) =>
+      isCurrentlySaved ? prev.filter((id) => id !== imageId) : [...prev, imageId]
+    );
+
+    try {
+      if (isCurrentlySaved) {
+        await unsaveImage(imageId);
+      } else {
+        await saveImage(imageId);
+      }
+    } catch (error) {
+      console.error(error);
+      setSavedImageIds((prev) =>
+        isCurrentlySaved ? [...prev, imageId] : prev.filter((id) => id !== imageId)
       );
     }
   };
@@ -154,6 +187,8 @@ export default function HomePage() {
                 searchQuery={searchQuery}
                 activeCategory={activeCategory}
                 onToggleLike={handleToggleLike}
+                savedImageIds={savedImageIds}
+                onToggleSave={handleToggleSave}
               />
             </Suspense>
 
