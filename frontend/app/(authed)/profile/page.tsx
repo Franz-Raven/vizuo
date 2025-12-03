@@ -69,7 +69,7 @@ export default function ProfilePage() {
       setUser(response.user)
       setEditForm(response.user)
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      toast.error('Error fetching user data:', error)
     } finally {
       setIsLoading(false)
     }
@@ -81,14 +81,14 @@ export default function ProfilePage() {
       const response = await uploadImage(file, type)
 
       if (type === 'avatar') {
-        setEditForm(prev => ({ ...prev, avatar: response.url }))
+            setEditForm(prev => ({ ...prev, avatar: response.url }))
       } else {
         setEditForm(prev => ({ ...prev, coverImage: response.url }))
       }
 
       toast.success('Image uploaded successfully!')
     } catch (error) {
-      console.error('Upload error:', error)
+      toast.error('Upload error:', error)
       if (error instanceof Error) {
         toast.error("Failed to update image: " + error.message)
       } else {
