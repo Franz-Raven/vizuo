@@ -7,104 +7,127 @@ import com.vizuo.backend.entity.Message;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.repository.ConversationRepository;
 import com.vizuo.backend.repository.MessageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class MessageService {
 
-    private final MessageRepository messageRepository;
-    private final ConversationRepository conversationRepository;
-    private final UserService userService;
+    @Autowired
+    private MessageRepository messageRepository;
 
-    public MessageService(MessageRepository messageRepository,
-                          ConversationRepository conversationRepository,
-                          UserService userService) {
-        this.messageRepository = messageRepository;
-        this.conversationRepository = conversationRepository;
-        this.userService = userService;
-    }
+    @Autowired
+    private ConversationRepository conversationRepository;
 
-    public Message sendMessage(Long senderId, Long receiverId, String content) {
-        Conversation conversation = findOrCreateConversation(senderId, receiverId);
-        User sender = userService.getUserById(senderId);
+    @Autowired
+    private UserService userService;
 
-        Message message = new Message(conversation, sender, content);
-        Message savedMessage = messageRepository.save(message);
-
-        conversation.setLastMessage(savedMessage.getSentAt());
-        conversationRepository.save(conversation);
-
-        return savedMessage;
-    }
-
-    private Conversation findOrCreateConversation(Long user1Id, Long user2Id) {
-        List<Long> userIds = List.of(user1Id, user2Id);
-        Optional<Conversation> existingConversation = conversationRepository
-                .findConversationByUserIds(userIds, 2L);
-
-        if (existingConversation.isPresent()) {
-            return existingConversation.get();
-        }
-
-        Conversation conversation = new Conversation();
+    @Transactional
+    public Conversation getOrCreateConversation(Long user1Id, Long user2Id) {
         User user1 = userService.getUserById(user1Id);
         User user2 = userService.getUserById(user2Id);
 
+        Optional<Conversation> existing = conversationRepository
+                .findConversationBetweenUsers(user1, user2);
+
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        Conversation conversation = new Conversation();
         conversation.addParticipant(user1);
         conversation.addParticipant(user2);
 
         return conversationRepository.save(conversation);
     }
 
-    public List<MessageResponse> getConversationMessages(Long conversationId, Long currentUserId) {
-        if (!conversationRepository.isUserInConversation(conversationId, currentUserId)) {
-            throw new SecurityException("User not authorized to access this conversation");
+    @Transactional
+    public Message sendMessage(Long conversationId, Long senderId, String content) {
+        if (!conversationRepository.isUserParticipant(conversationId, senderId)) {
+            throw new RuntimeException("Access denied: User is not a participant in this conversation");
         }
+        Conversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new RuntimeException("Conversation not found with id: " + conversationId));
+        User sender = userService.getUserById(senderId);
+        Message message = new Message(conversation, sender, content);
+        conversation.setLastMessage(LocalDateTime.now());
+        conversationRepository.save(conversation);
 
-        List<Message> messages = messageRepository.findByConversationIdOrderBySentAtAsc(conversationId);
-        return messages.stream().map(this::mapToMessageResponse).collect(Collectors.toList());
+        return messageRepository.save(message);
+    }
+
+    public List<MessageResponse> getConversationMessages(Long conversationId, Long userId) {
+        if (!conversationRepository.isUserParticipant(conversationId, userId)) {
+            throw new RuntimeException("Access denied to conversation: " + conversationId);
+        }
+        List<Message> messages = messageRepository.findMessagesByConversationId(conversationId);
+        return messages.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     public List<ConversationResponse> getUserConversations(Long userId) {
-        List<Conversation> conversations = conversationRepository.findByUserId(userId);
+        List<Conversation> conversations = conversationRepository.findConversationsByUserId(userId);
+
         return conversations.stream()
-                .map(conv -> mapToConversationResponse(conv, userId))
+                .map(conversation -> mapToConversationResponse(conversation, userId))
                 .collect(Collectors.toList());
     }
 
-    public Long getUnreadCount(Long userId) {
-        List<Conversation> conversations = conversationRepository.findByUserId(userId);
-        return conversations.stream()
-                .mapToLong(conv -> messageRepository.countByConversationIdAndIsReadFalseAndSenderIdNot(conv.getId(), userId))
-                .sum();
+    @Transactional
+    public void markConversationAsRead(Long conversationId, Long userId) {
+        messageRepository.markMessagesAsRead(conversationId, userId);
     }
 
-    public void markConversationAsRead(Long conversationId, Long userId) {
-        if (!conversationRepository.isUserInConversation(conversationId, userId)) {
-            throw new SecurityException("User not authorized to access this conversation");
+    private ConversationResponse mapToConversationResponse(Conversation conversation, Long currentUserId) {
+        ConversationResponse response = new ConversationResponse();
+        response.setId(conversation.getId());
+        response.setCreatedAt(conversation.getCreatedAt());
+        response.setLastMessageAt(conversation.getLastMessage());
+
+        Optional<Message> lastMessageOpt = messageRepository
+                .findLastMessageByConversationId(conversation.getId());
+
+        if (lastMessageOpt.isPresent()) {
+            Message msg = lastMessageOpt.get();
+            ConversationResponse.LastMessageDTO lastMessageDto = 
+                new ConversationResponse.LastMessageDTO();
+            lastMessageDto.setId(msg.getId());
+            lastMessageDto.setContent(msg.getContent());
+            lastMessageDto.setSenderId(msg.getSender().getId());
+            lastMessageDto.setSenderUsername(msg.getSender().getUsername());
+            lastMessageDto.setSentAt(msg.getSentAt());
+            lastMessageDto.setIsRead(msg.getIsRead());
+            response.setLastMessage(lastMessageDto);
         }
 
-        List<Message> unreadMessages = messageRepository.findUnreadMessages(conversationId, userId);
-        unreadMessages.forEach(m -> m.setIsRead(true));
-        messageRepository.saveAll(unreadMessages);
+        Long unreadCount = messageRepository
+                .countUnreadMessagesInConversation(conversation.getId(), currentUserId);
+        response.setUnreadCount(unreadCount);
+
+        // Map participants
+        List<ConversationResponse.ParticipantDTO> participantDTOs = 
+            conversation.getParticipants().stream()
+                .map(user -> {
+                    ConversationResponse.ParticipantDTO dto = 
+                        new ConversationResponse.ParticipantDTO();
+                    dto.setId(user.getId());
+                    dto.setUsername(user.getUsername());
+                    dto.setAvatar(user.getAvatar());
+                    dto.setIsOnline(false); // default for now (no websocket yet)
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        response.setParticipants(participantDTOs);
+
+        return response;
     }
 
-    public Optional<Conversation> getConversationBetweenUsers(Long user1Id, Long user2Id) {
-        List<Long> userIds = List.of(user1Id, user2Id);
-        return conversationRepository.findConversationByUserIds(userIds, 2L);
-    }
-
-    public boolean isUserInConversation(Long conversationId, Long userId) {
-        return conversationRepository.isUserInConversation(conversationId, userId);
-    }
-
-    private MessageResponse mapToMessageResponse(Message message) {
+    private MessageResponse mapToResponse(Message message) {
         MessageResponse response = new MessageResponse();
         response.setId(message.getId());
         response.setConversationId(message.getConversation().getId());
@@ -117,31 +140,10 @@ public class MessageService {
         return response;
     }
 
-    private ConversationResponse mapToConversationResponse(Conversation conversation, Long currentUserId) {
-        ConversationResponse response = new ConversationResponse();
-        response.setId(conversation.getId());
-        response.setCreatedAt(conversation.getCreatedAt());
-        response.setLastMessageAt(conversation.getLastMessage());
-
-        List<User> otherParticipants = conversation.getParticipants().stream()
-                .filter(user -> !user.getId().equals(currentUserId))
-                .collect(Collectors.toList());
-        response.setParticipants(otherParticipants);
-
-        Optional<Message> lastMessage = conversation.getMessages().stream()
-                .max((m1, m2) -> m1.getSentAt().compareTo(m2.getSentAt()));
-
-        if (lastMessage.isPresent()) {
-            Message message = lastMessage.get();
-            response.setLastMessageContent(message.getContent());
-            response.setLastMessageSenderId(message.getSender().getId());
-            response.setLastMessageSentAt(message.getSentAt());
-        }
-
-        Long unreadCount = messageRepository.countByConversationIdAndIsReadFalseAndSenderIdNot(
-                conversation.getId(), currentUserId);
-        response.setUnreadCount(unreadCount);
-
-        return response;
+    public Long getTotalUnreadCount(Long userId) {
+        List<Conversation> conversations = conversationRepository.findConversationsByUserId(userId);
+        return conversations.stream()
+            .mapToLong(conv -> messageRepository.countUnreadMessagesInConversation(conv.getId(), userId))
+            .sum();
     }
 }

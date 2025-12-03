@@ -57,6 +57,10 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+    // for conversations
+    @ManyToMany(mappedBy = "participants", fetch = FetchType.LAZY)
+    private Set<Conversation> conversations = new HashSet<>();
+
     public User() {}
 
     public User(String email, String username, String password) {
