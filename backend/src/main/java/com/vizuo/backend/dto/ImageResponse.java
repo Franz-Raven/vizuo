@@ -11,11 +11,23 @@ public class ImageResponse {
     private String thumbnailUrl;
     private List<String> attachmentUrls;
     private LocalDateTime createdAt;
+    private long likesCount;
+    private String uploaderUsername;
+    private boolean likedByCurrentUser;
 
     public ImageResponse() {}
 
-    public ImageResponse(Long id, String fileName, String description, List<String> keywords, 
-                        String thumbnailUrl, List<String> attachmentUrls, LocalDateTime createdAt) {
+    public ImageResponse(
+            Long id,
+            String fileName,
+            String description,
+            List<String> keywords,
+            String thumbnailUrl,
+            List<String> attachmentUrls,
+            LocalDateTime createdAt,
+            long likesCount,
+            String uploaderUsername
+    ) {
         this.id = id;
         this.fileName = fileName;
         this.description = description;
@@ -23,6 +35,33 @@ public class ImageResponse {
         this.thumbnailUrl = thumbnailUrl;
         this.attachmentUrls = attachmentUrls;
         this.createdAt = createdAt;
+        this.likesCount = likesCount;
+        this.uploaderUsername = uploaderUsername;
+        this.likedByCurrentUser = false;
+    }
+
+    public ImageResponse(
+            Long id,
+            String fileName,
+            String description,
+            List<String> keywords,
+            String thumbnailUrl,
+            List<String> attachmentUrls,
+            LocalDateTime createdAt,
+            long likesCount,
+            String uploaderUsername,
+            boolean likedByCurrentUser
+    ) {
+        this.id = id;
+        this.fileName = fileName;
+        this.description = description;
+        this.keywords = keywords;
+        this.thumbnailUrl = thumbnailUrl;
+        this.attachmentUrls = attachmentUrls;
+        this.createdAt = createdAt;
+        this.likesCount = likesCount;
+        this.uploaderUsername = uploaderUsername;
+        this.likedByCurrentUser = likedByCurrentUser;
     }
 
     public Long getId() { return id; }
@@ -45,4 +84,13 @@ public class ImageResponse {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public long getLikesCount() { return likesCount; }
+    public void setLikesCount(long likesCount) { this.likesCount = likesCount; }
+
+    public String getUploaderUsername() { return uploaderUsername; }
+    public void setUploaderUsername(String uploaderUsername) { this.uploaderUsername = uploaderUsername; }
+
+    public boolean isLikedByCurrentUser() { return likedByCurrentUser; }
+    public void setLikedByCurrentUser(boolean likedByCurrentUser) { this.likedByCurrentUser = likedByCurrentUser; }
 }
