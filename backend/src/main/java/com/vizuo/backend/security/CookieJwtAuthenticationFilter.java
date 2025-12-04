@@ -23,6 +23,8 @@ public class CookieJwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserService userService;
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CookieJwtAuthenticationFilter.class);
+
     public CookieJwtAuthenticationFilter(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
@@ -36,24 +38,30 @@ public class CookieJwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = extractToken(request);
 
+        logger.debug("Request to: {}", request.getRequestURI());
+        logger.debug("Token extracted: {}", token != null ? "YES" : "NO");
+
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 String userIdStr = jwtService.extractUserId(token);
                 Long userId = Long.parseLong(userIdStr);
 
                 userService.getUserById(userId);
+                logger.debug("User found in database");
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 userIdStr,
                                 null,
-                                null
+                                java.util.Collections.emptyList()
                         );
 
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                 logger.error("Failed to authenticate user from token", e);
+                SecurityContextHolder.clearContext();
             }
         }
 

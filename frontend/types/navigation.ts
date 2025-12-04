@@ -12,5 +12,5 @@ export const navItems: NavItem[] = [
   { key: "upload", label: "Upload", href: "/upload", icon: Upload },
   { key: "moodboard", label: "Moodboard", href: "/moodboard", icon: Palette },
   { key: "community", label: "Community", href: "/community", icon: Users },
-  { key: "messages", label: "Messages", href: "/messages", icon: MessageSquare },
+  { key: "messages", label: "Messages", href: "/messaging", icon: MessageSquare },
 ]

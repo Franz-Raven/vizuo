@@ -69,7 +69,8 @@ export default function ProfilePage() {
       setUser(response.user)
       setEditForm(response.user)
     } catch (error) {
-      toast.error('Error fetching user data:', error)
+      toast.error('Failed to load profile data');
+      console.error('Profile fetch error:', error);
     } finally {
       setIsLoading(false)
     }
@@ -88,7 +89,8 @@ export default function ProfilePage() {
 
       toast.success('Image uploaded successfully!')
     } catch (error) {
-      toast.error('Upload error:', error)
+      toast.error('Failed to load upload data');
+      console.error('Profile fetch error:', error);
       if (error instanceof Error) {
         toast.error("Failed to update image: " + error.message)
       } else {
