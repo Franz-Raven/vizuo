@@ -23,12 +23,12 @@ public class CloudinaryService {
     }
 
     @SuppressWarnings("unchecked")
-    public String uploadImage(MultipartFile file, String type) {
+    public CloudinaryUploadResult uploadImageWithMeta(MultipartFile file, String type) {
         try {
             if (file.isEmpty()) {
                 throw new RuntimeException("File is empty");
             }
-            
+
             Map<String, Object> uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
@@ -39,11 +39,20 @@ public class CloudinaryService {
                     )
             );
 
-            return uploadResult.get("secure_url").toString();
+            String url = uploadResult.get("secure_url").toString();
+            Object formatObj = uploadResult.get("format");
+            String format = formatObj != null ? formatObj.toString() : null;
+
+            return new CloudinaryUploadResult(url, format);
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload image to Cloudinary", e);
         }
+    }
+
+    public String uploadImage(MultipartFile file, String type) {
+        CloudinaryUploadResult result = uploadImageWithMeta(file, type);
+        return result.getUrl();
     }
 
     public void deleteImage(String imageUrl) {

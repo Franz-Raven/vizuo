@@ -9,7 +9,7 @@ public class ImageResponse {
     private String description;
     private List<String> keywords;
     private String thumbnailUrl;
-    private List<String> attachmentUrls;
+    private List<AttachmentInfo> attachments;
     private LocalDateTime createdAt;
     private long likesCount;
     private String uploaderUsername;
@@ -23,7 +23,7 @@ public class ImageResponse {
             String description,
             List<String> keywords,
             String thumbnailUrl,
-            List<String> attachmentUrls,
+            List<AttachmentInfo> attachments,
             LocalDateTime createdAt,
             long likesCount,
             String uploaderUsername
@@ -33,7 +33,7 @@ public class ImageResponse {
         this.description = description;
         this.keywords = keywords;
         this.thumbnailUrl = thumbnailUrl;
-        this.attachmentUrls = attachmentUrls;
+        this.attachments = attachments;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
@@ -46,7 +46,7 @@ public class ImageResponse {
             String description,
             List<String> keywords,
             String thumbnailUrl,
-            List<String> attachmentUrls,
+            List<AttachmentInfo> attachments,
             LocalDateTime createdAt,
             long likesCount,
             String uploaderUsername,
@@ -57,7 +57,7 @@ public class ImageResponse {
         this.description = description;
         this.keywords = keywords;
         this.thumbnailUrl = thumbnailUrl;
-        this.attachmentUrls = attachmentUrls;
+        this.attachments = attachments;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
@@ -79,8 +79,8 @@ public class ImageResponse {
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
-    public List<String> getAttachmentUrls() { return attachmentUrls; }
-    public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }
+    public List<AttachmentInfo> getAttachments() { return attachments; }
+    public void setAttachments(List<AttachmentInfo> attachments) { this.attachments = attachments; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
