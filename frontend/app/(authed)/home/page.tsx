@@ -7,9 +7,13 @@ import BackgroundBlobs from "@/components/background-blobs";
 import { getHomeAssets } from "@/lib/api/home";
 import { likeAsset, unlikeAsset } from "@/lib/api/like";
 import { getSavedImages, saveImage, unsaveImage } from "@/lib/api/save-image";
+import { getMoodboards, assignSavedImagesToMoodboard } from "@/lib/api/moodboard";
 import { Asset } from "@/types/asset";
 import { ImageResponse } from "@/types/home";
 import { SavedImage } from "@/types/save-image";
+import { Moodboard } from "@/types/moodboard";
+import AssetViewerModal from "@/components/preview/asset-viewer-modal";
+import OrganizeModal from "@/components/moodboard/organize-modal";
 
 const LazyAssetGrid = lazy(() => import("@/components/home/assetgrid"));
 
@@ -29,7 +33,14 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [assets, setAssets] = useState<Asset[]>([]);
   const [savedImageIds, setSavedImageIds] = useState<number[]>([]);
+  const [savedImages, setSavedImages] = useState<SavedImage[]>([]);
+  const [moodboards, setMoodboards] = useState<Moodboard[]>([]);
   const [loadingMain, setLoadingMain] = useState(true);
+  const [fullAssets, setFullAssets] = useState<ImageResponse[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<ImageResponse | null>(null);
+  const [isOrganizeOpen, setIsOrganizeOpen] = useState(false);
+  const [organizeSavedIds, setOrganizeSavedIds] = useState<number[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -41,9 +52,10 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [assetsData, savedData] = await Promise.all([
+        const [assetsData, savedData, boardData] = await Promise.all([
           getHomeAssets(),
-          getSavedImages()
+          getSavedImages(),
+          getMoodboards()
         ]);
 
         const mapped: Asset[] = assetsData.map((item: ImageResponse) => ({
@@ -56,10 +68,14 @@ export default function HomePage() {
           isLiked: item.likedByCurrentUser ?? false
         }));
 
-        const savedIds = (savedData as SavedImage[]).map((s) => s.imageId);
+        const saved = savedData as SavedImage[];
+        const savedIds = saved.map((s) => s.imageId);
 
+        setFullAssets(assetsData);
         setAssets(mapped);
+        setSavedImages(saved);
         setSavedImageIds(savedIds);
+        setMoodboards(boardData);
       } catch (e) {
         console.error(e);
       } finally {
@@ -68,6 +84,14 @@ export default function HomePage() {
     }
     fetchData();
   }, []);
+
+  const handleSelectAsset = (id: number) => {
+    const found = fullAssets.find((a) => a.id === id);
+    if (found) {
+      setSelectedAsset(found);
+      setViewerOpen(true);
+    }
+  };
 
   const handleToggleLike = async (id: number, currentlyLiked: boolean) => {
     setAssets((prev) =>
@@ -123,6 +147,55 @@ export default function HomePage() {
         isCurrentlySaved ? [...prev, imageId] : prev.filter((id) => id !== imageId)
       );
     }
+  };
+
+  const handleSaveToMoodboards = async (imageId: number) => {
+    try {
+      const existing = savedImages.find((s) => s.imageId === imageId);
+      let finalSaved: SavedImage;
+
+      if (!existing) {
+        const created = await saveImage(imageId);
+        finalSaved = created as SavedImage;
+
+        setSavedImages((prev) => [...prev, finalSaved]);
+        setSavedImageIds((prev) =>
+          prev.includes(imageId) ? prev : [...prev, imageId]
+        );
+      } else {
+        finalSaved = existing;
+      }
+
+      if (moodboards.length === 0) {
+        const boards = await getMoodboards();
+        setMoodboards(boards);
+      }
+
+      setOrganizeSavedIds([finalSaved.id]);
+      setIsOrganizeOpen(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAssignToBoard = async (
+    moodboardId: number,
+    savedIds: number[]
+  ) => {
+    if (!savedIds.length) return;
+    try {
+      const updated = await assignSavedImagesToMoodboard(moodboardId, savedIds);
+      setMoodboards((prev) =>
+        prev.map((b) => (b.id === updated.id ? updated : b))
+      );
+      setIsOrganizeOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateBoardWithImages = async () => {
+    return;
   };
 
   return (
@@ -189,6 +262,7 @@ export default function HomePage() {
                 onToggleLike={handleToggleLike}
                 savedImageIds={savedImageIds}
                 onToggleSave={handleToggleSave}
+                onSelect={handleSelectAsset}
               />
             </Suspense>
 
@@ -200,6 +274,31 @@ export default function HomePage() {
           </div>
         </main>
       )}
+
+      {viewerOpen && selectedAsset && (
+        <AssetViewerModal
+          open={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          title={selectedAsset.fileName || "Untitled"}
+          creator={selectedAsset.uploaderUsername || "Unknown"}
+          imageUrl={selectedAsset.thumbnailUrl || ""}
+          attachments={selectedAsset.attachments || []}
+          avatarUrl={selectedAsset.uploaderAvatar ?? null}
+          onSaveToMoodboards={() => handleSaveToMoodboards(selectedAsset.id)}
+        />
+      )}
+
+      <OrganizeModal
+        open={isOrganizeOpen}
+        onClose={() => setIsOrganizeOpen(false)}
+        savedImages={savedImages}
+        moodboards={moodboards}
+        onAssignToBoard={handleAssignToBoard}
+        onCreateBoardWithImages={handleCreateBoardWithImages}
+        mode="single"
+        preselectedSavedIds={organizeSavedIds}
+        disableBack
+      />
     </div>
   );
 }

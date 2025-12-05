@@ -33,4 +33,7 @@ export interface OrganizeModalProps {
   onCreateBoardWithImages: (
     savedImageIds: number[]
   ) => Promise<void> | void;
+  mode?: "multi" | "single";
+  preselectedSavedIds?: number[];
+  disableBack?: boolean;
 }

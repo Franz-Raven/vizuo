@@ -131,6 +131,7 @@ public class ImageService {
     private ImageResponse toResponse(Image image) {
         long likesCount = likeService.getLikeCountForImage(image.getId());
         String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
+        String uploaderAvatar = image.getUser() != null ? image.getUser().getAvatar() : null;
         List<AttachmentInfo> attachments = buildAttachmentInfoList(image);
 
         return new ImageResponse(
@@ -142,12 +143,14 @@ public class ImageService {
                 attachments,
                 image.getCreatedAt(),
                 likesCount,
-                uploaderUsername);
+                uploaderUsername,
+                uploaderAvatar);
     }
 
     private ImageResponse toResponse(Image image, Long currentUserId) {
         long likesCount = likeService.getLikeCountForImage(image.getId());
         String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
+        String uploaderAvatar = image.getUser() != null ? image.getUser().getAvatar() : null;
         boolean likedByCurrentUser = currentUserId != null &&
                 likeService.hasUserLikedImage(image.getId(), currentUserId);
         List<AttachmentInfo> attachments = buildAttachmentInfoList(image);
@@ -162,6 +165,7 @@ public class ImageService {
                 image.getCreatedAt(),
                 likesCount,
                 uploaderUsername,
+                uploaderAvatar,
                 likedByCurrentUser);
     }
 

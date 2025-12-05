@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { OrganizeModalProps } from "@/types/moodboard";
 
@@ -10,11 +10,23 @@ export default function OrganizeModal({
   savedImages,
   moodboards,
   onAssignToBoard,
-  onCreateBoardWithImages
+  onCreateBoardWithImages,
+  mode = "multi",
+  preselectedSavedIds,
+  disableBack
 }: OrganizeModalProps) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const isSingle = mode === "single";
+  const [step, setStep] = useState<1 | 2>(isSingle ? 2 : 1);
+  const [selectedIds, setSelectedIds] = useState<number[]>(preselectedSavedIds ?? []);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setStep(isSingle ? 2 : 1);
+      setSelectedIds(preselectedSavedIds ?? []);
+      setSubmitting(false);
+    }
+  }, [open, isSingle, preselectedSavedIds]);
 
   if (!open) return null;
 
@@ -25,8 +37,8 @@ export default function OrganizeModal({
   };
 
   const resetAndClose = () => {
-    setStep(1);
-    setSelectedIds([]);
+    setStep(isSingle ? 2 : 1);
+    setSelectedIds(preselectedSavedIds ?? []);
     setSubmitting(false);
     onClose();
   };
@@ -61,26 +73,30 @@ export default function OrganizeModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60">
       <div className="w-full max-w-4xl max-h-[80vh] bg-background rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-border/60">
-          {step === 1 ? (
+          {isSingle ? (
+            <h2 className="text-lg font-semibold">Move to a board</h2>
+          ) : step === 1 ? (
             <h2 className="text-lg font-semibold">Organize into a board</h2>
           ) : (
             <div className="flex items-center gap-3">
-              <button
-                className="text-sm text-muted-foreground hover:text-foreground"
-                onClick={() => setStep(1)}
-                disabled={submitting}
-              >
-                ←
-              </button>
+              {!disableBack && (
+                <button
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                  onClick={() => setStep(1)}
+                  disabled={submitting}
+                >
+                  ←
+                </button>
+              )}
               <h2 className="text-lg font-semibold">Move to a board</h2>
             </div>
           )}
 
           <div className="flex items-center gap-4">
-            {step === 1 && selectedIds.length > 0 && (
+            {!isSingle && step === 1 && selectedIds.length > 0 && (
               <span className="text-sm text-muted-foreground">
                 {selectedIds.length} selected
               </span>
@@ -95,7 +111,40 @@ export default function OrganizeModal({
           </div>
         </div>
 
-        {step === 1 ? (
+        {isSingle ? (
+          <div className="flex-1 px-8 py-6 overflow-auto">
+            <div className="space-y-4">
+              {moodboards.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium mb-3">All boards</p>
+                  <div className="space-y-3">
+                    {moodboards.map((board) => (
+                      <button
+                        key={board.id}
+                        type="button"
+                        onClick={() => handleMoveToBoard(board.id)}
+                        className="w-full flex items-center justify-between rounded-2xl border border-border px-4 py-3 hover:border-primary/60 hover:bg-primary/5 transition disabled:opacity-50"
+                        disabled={submitting}
+                      >
+                        <div className="flex flex-col text-left">
+                          <span className="text-sm font-semibold">
+                            {board.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {board.savedImageIds.length} items
+                          </span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          +
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : step === 1 ? (
           <div className="flex-1 px-8 py-6 overflow-auto flex items-center justify-center">
             {savedImages.length === 0 ? (
               <p className="text-muted-foreground text-sm">
@@ -184,7 +233,16 @@ export default function OrganizeModal({
         )}
 
         <div className="flex justify-end px-8 py-4 border-t border-border/60">
-          {step === 1 ? (
+          {isSingle ? (
+            <button
+              type="button"
+              onClick={resetAndClose}
+              className="px-6 py-2 rounded-full bg-card border border-border text-sm font-semibold hover:border-primary/70 hover:bg-primary/5 transition disabled:opacity-50"
+              disabled={submitting}
+            >
+              Done
+            </button>
+          ) : step === 1 ? (
             <button
               type="button"
               onClick={handleNext}
