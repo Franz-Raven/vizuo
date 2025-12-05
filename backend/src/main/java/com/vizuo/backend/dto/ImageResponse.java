@@ -13,6 +13,7 @@ public class ImageResponse {
     private LocalDateTime createdAt;
     private long likesCount;
     private String uploaderUsername;
+    private String uploaderAvatar;
     private boolean likedByCurrentUser;
 
     public ImageResponse() {}
@@ -26,7 +27,8 @@ public class ImageResponse {
             List<AttachmentInfo> attachments,
             LocalDateTime createdAt,
             long likesCount,
-            String uploaderUsername
+            String uploaderUsername,
+            String uploaderAvatar
     ) {
         this.id = id;
         this.fileName = fileName;
@@ -37,6 +39,7 @@ public class ImageResponse {
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
+        this.uploaderAvatar = uploaderAvatar;
         this.likedByCurrentUser = false;
     }
 
@@ -50,6 +53,7 @@ public class ImageResponse {
             LocalDateTime createdAt,
             long likesCount,
             String uploaderUsername,
+            String uploaderAvatar,
             boolean likedByCurrentUser
     ) {
         this.id = id;
@@ -61,6 +65,7 @@ public class ImageResponse {
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
+        this.uploaderAvatar = uploaderAvatar;
         this.likedByCurrentUser = likedByCurrentUser;
     }
 
@@ -90,6 +95,9 @@ public class ImageResponse {
 
     public String getUploaderUsername() { return uploaderUsername; }
     public void setUploaderUsername(String uploaderUsername) { this.uploaderUsername = uploaderUsername; }
+
+    public String getUploaderAvatar() { return uploaderAvatar; }
+    public void setUploaderAvatar(String uploaderAvatar) { this.uploaderAvatar = uploaderAvatar; }
 
     public boolean isLikedByCurrentUser() { return likedByCurrentUser; }
     public void setLikedByCurrentUser(boolean likedByCurrentUser) { this.likedByCurrentUser = likedByCurrentUser; }

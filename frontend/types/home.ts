@@ -13,5 +13,6 @@ export type ImageResponse = {
   createdAt: string
   likesCount: number
   uploaderUsername?: string | null
+  uploaderAvatar?: string | null
   likedByCurrentUser?: boolean
 }

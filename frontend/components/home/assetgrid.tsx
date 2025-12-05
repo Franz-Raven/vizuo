@@ -7,7 +7,8 @@ export default function AssetGridComponent({
   activeCategory,
   onToggleLike,
   savedImageIds,
-  onToggleSave
+  onToggleSave,
+  onSelect
 }: AssetGridProps) {
   const filteredAssets = assets.filter((asset) => {
     const matchesSearch =
@@ -28,6 +29,7 @@ export default function AssetGridComponent({
             <div
               key={asset.id}
               className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card border border-border cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
+              onClick={() => onSelect(asset.id)}
             >
               <div className="absolute top-0 left-0 right-0 p-4 z-20 bg-gradient-to-b from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
                 <p className="text-white text-sm font-semibold truncate">
