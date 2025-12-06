@@ -33,3 +33,54 @@ export async function removeSavedImageFromMoodboard(
     }
   );
 }
+
+export async function getPublicMoodboards(search?: string) {
+  const query = search ? `?search=${encodeURIComponent(search)}` : "";
+  return apiRequest<Moodboard[]>(`/moodboards/public${query}`);
+}
+
+export async function getSavedMoodboards() {
+  return apiRequest<Moodboard[]>("/moodboards/saved");
+}
+
+export async function saveMoodboard(moodboardId: number) {
+  return apiRequest<void>(`/moodboards/${moodboardId}/save`, {
+    method: "POST",
+  });
+}
+
+export async function unsaveMoodboard(moodboardId: number) {
+  return apiRequest<void>(`/moodboards/${moodboardId}/save`, {
+    method: "DELETE",
+  });
+}
+
+export async function getMoodboardById(moodboardId: number) {
+  return apiRequest<Moodboard>(`/moodboards/${moodboardId}`);
+}
+
+export async function updateMoodboard(
+  moodboardId: number,
+  data: { name: string; description: string }
+) {
+  return apiRequest<Moodboard>(`/moodboards/${moodboardId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteMoodboard(moodboardId: number) {
+  return apiRequest<void>(`/moodboards/${moodboardId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function reorderMoodboardImages(
+  moodboardId: number,
+  savedImageIds: number[]
+) {
+  return apiRequest<Moodboard>(`/moodboards/${moodboardId}/reorder`, {
+    method: "PUT",
+    body: JSON.stringify(savedImageIds),
+  });
+}
