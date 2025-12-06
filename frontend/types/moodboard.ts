@@ -7,6 +7,11 @@ export interface Moodboard {
   isPrivate: boolean;
   createdAt: string;
   savedImageIds: number[];
+  userId?: number;
+  username?: string;
+  saveCount?: number;
+  isSaved?: boolean;
+  previewImages?: string[];
 }
 
 export interface MoodboardCreatePayload {

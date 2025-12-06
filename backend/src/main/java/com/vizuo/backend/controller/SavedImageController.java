@@ -43,4 +43,14 @@ public class SavedImageController {
         List<SavedImageResponse> res = savedImageService.getSavedImages(userId);
         return ResponseEntity.ok(res);
     }
+
+    @GetMapping("/by-ids")
+    public ResponseEntity<List<SavedImageResponse>> getSavedImagesByIds(
+            @RequestParam List<Long> ids,
+            Authentication auth
+    ) {
+        Long userId = Long.parseLong(auth.getName());
+        List<SavedImageResponse> res = savedImageService.getSavedImagesByIds(userId, ids);
+        return ResponseEntity.ok(res);
+    }
 }

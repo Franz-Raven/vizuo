@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Moodboard } from "@/types/moodboard";
 
 type MoodboardCardProps = {
@@ -9,10 +10,14 @@ type MoodboardCardProps = {
 };
 
 export default function MoodboardCard({ board, thumbnails }: MoodboardCardProps) {
+  const router = useRouter();
   const [t0, t1, t2] = thumbnails;
 
   return (
-    <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-lg transform transition-transform transition-shadow duration-200 hover:shadow-primary/20 hover:-translate-y-0.5 cursor-pointer group">
+    <div 
+      onClick={() => router.push(`/moodboard/${board.id}`)}
+      className="rounded-2xl bg-card border border-border overflow-hidden shadow-lg transform transition-transform transition-shadow duration-200 hover:shadow-primary/20 hover:-translate-y-0.5 cursor-pointer group"
+    >
       {thumbnails.length === 0 ? (
         <div className="h-40 w-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
           <span className="text-primary-foreground/70 text-sm">

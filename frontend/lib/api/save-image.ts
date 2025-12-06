@@ -16,3 +16,8 @@ export async function unsaveImage(imageId: number) {
     method: "DELETE",
   });
 }
+
+export async function getSavedImagesByIds(ids: number[]) {
+  const query = ids.map(id => `ids=${id}`).join("&");
+  return apiRequest<SavedImage[]>(`/saved-images/by-ids?${query}`);
+}
