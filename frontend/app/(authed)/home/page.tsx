@@ -283,6 +283,7 @@ export default function HomePage() {
           creator={selectedAsset.uploaderUsername || "Unknown"}
           imageUrl={selectedAsset.thumbnailUrl || ""}
           attachments={selectedAsset.attachments || []}
+          imageId={selectedAsset.id || 0}
           avatarUrl={selectedAsset.uploaderAvatar ?? null}
           onSaveToMoodboards={() => handleSaveToMoodboards(selectedAsset.id)}
         />

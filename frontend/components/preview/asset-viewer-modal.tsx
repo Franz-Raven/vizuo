@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Palette, MoreVertical, Flag, Share2 } from "lucide-react";
 import DownloadMenu from "./download-menu";
+import CommentSection from "@/components/comment/comment-section";
 
 type Attachment = {
   url: string;
@@ -16,6 +17,7 @@ type AssetViewerModalProps = {
   creator: string;
   imageUrl: string;
   attachments: Attachment[];
+  imageId: number;
   avatarUrl?: string | null;
   onSaveToMoodboards?: () => void;
 };
@@ -27,6 +29,7 @@ export default function AssetViewerModal({
   creator,
   imageUrl,
   attachments,
+  imageId,
   avatarUrl,
   onSaveToMoodboards
 }: AssetViewerModalProps) {
@@ -152,12 +155,17 @@ export default function AssetViewerModal({
             </div>
           </div>
 
-          <div className="relative flex-1 overflow-auto rounded-xl bg-card border border-border flex items-center justify-center">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="max-h-full max-w-full object-contain"
-            />
+          <div className="flex flex-col md:flex-row gap-4 h-[70vh]">
+            <div className="relative w-full md:w-1/2 rounded-xl bg-card border border-border flex items-center justify-center overflow-hidden">
+              <img
+                src={imageUrl}
+                alt={title}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+            <div className="w-full md:w-1/2 rounded-xl bg-card border border-border p-4 flex flex-col overflow-hidden">
+              <CommentSection imageId={imageId} />
+            </div>
           </div>
         </div>
       </div>
