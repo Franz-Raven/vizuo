@@ -39,13 +39,11 @@ export default function MessagingPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   
-  // New states for user search
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
 
-  // Helper function to get the other user from a conversation
   const getOtherUserFromConversation = (conversation: Conversation): User | undefined => {
     // According to your types, conversations have participants array
     if (conversation.participants && conversation.participants.length > 0) {
@@ -66,7 +64,6 @@ export default function MessagingPage() {
     }
   }, [selectedConversation?.id, currentUser])
 
-  // Search users when query changes
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
       const delayDebounceFn = setTimeout(() => {
