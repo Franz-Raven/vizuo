@@ -55,27 +55,28 @@ export default function MessagingPage() {
     return undefined
   }
 
-    useEffect(() => {
-    if (currentUser?.id) {
-      console.log("Connecting WebSocket for user:", currentUser.id)
-      webSocketService
-        .connect(currentUser.id)
-        .then(() => {
-          setIsWsConnected(true)
-          console.log("WebSocket connected successfully")
-        })
-        .catch((error) => {
-          console.error("Failed to connect WebSocket:", error)
-          toast.error("Real-time messaging unavailable")
-        })
+  useEffect(() => {
+  if (currentUser?.id && !webSocketService.isConnected()) {
+    console.log("Connecting WebSocket for user:", currentUser.id);
+    
+    webSocketService.connect(currentUser.id)
+      .then(() => {
+        setIsWsConnected(true);
+        console.log("WebSocket connected successfully");
+      })
+      .catch((error) => {
+        console.error("Failed to connect WebSocket:", error);
+        toast.error("Real-time messaging unavailable");
+        setIsWsConnected(false);
+      });
+  }
 
-      return () => {
-        console.log("🔌 Disconnecting WebSocket")
-        webSocketService.disconnect()
-        setIsWsConnected(false)
-      }
-    }
-  }, [currentUser?.id])
+  return () => {
+    console.log("Cleaning up WebSocket connection");
+    webSocketService.disconnect();
+    setIsWsConnected(false);
+  };
+}, [currentUser?.id]);
 
   useEffect(() => {
     if (!selectedConversation?.id || !isWsConnected) return

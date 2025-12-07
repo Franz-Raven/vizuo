@@ -6,12 +6,14 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @Controller
+@Transactional
 public class WebSocketMessagingController {
 
     private final MessageService messageService; 
@@ -69,12 +71,14 @@ public class WebSocketMessagingController {
                 savedMessage.getSentAt(),
                 savedMessage.getIsRead()
             );
-            
+
+            logger.info("Sending back to sender {} via /user/{}/queue/messages/{}", userId, userId, conversationId);
             messagingTemplate.convertAndSendToUser(
                     userId.toString(),
                     "/queue/messages/" + conversationId,
                     response
             );
+            logger.info("Sent to sender: {}", response.getContent());
             
             if (otherUserId != null) {
                 messagingTemplate.convertAndSendToUser(

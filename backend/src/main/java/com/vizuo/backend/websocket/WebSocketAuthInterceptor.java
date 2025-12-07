@@ -30,26 +30,25 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             logger.debug("WebSocket CONNECT attempt");
-            
-            List<String> cookies = accessor.getNativeHeader("cookie");
-            String token = null;
 
-            if (cookies != null && !cookies.isEmpty()) {
-                for (String cookieHeader : cookies) {
-                    String[] cookiePairs = cookieHeader.split(";");
-                    for (String pair : cookiePairs) {
-                        String[] keyValue = pair.trim().split("=", 2);
-                        if (keyValue.length == 2 && "authToken".equals(keyValue[0])) {
-                            token = keyValue[1];
-                            break;
-                        }
-                    }
-                    if (token != null) break;
+        List<String> cookies = accessor.getNativeHeader("cookie");
+        logger.info("Cookies found: {}", cookies);
+        String token = null;
+        if (cookies != null && !cookies.isEmpty()) {
+            String cookieHeader = cookies.get(0);
+            logger.info("Cookie header: {}", cookieHeader);
+            
+            //parse cookies
+            String[] cookiePairs = cookieHeader.split(";");
+            for (String pair : cookiePairs) {
+                String[] keyValue = pair.trim().split("=", 2);
+                if (keyValue.length == 2 && "authToken".equals(keyValue[0])) {
+                    token = keyValue[1];
+                    logger.info("Found authToken: {}", token.substring(0, Math.min(20, token.length())) + "...");
+                    break;
                 }
             }
-
-            logger.debug("Token extracted from WebSocket: {}", token != null ? "YES" : "NO");
-
+        }
             if (token != null) {
                 try {
                     String userIdStr = jwtService.extractUserId(token);
