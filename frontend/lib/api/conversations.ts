@@ -34,7 +34,8 @@ export async function markConversationAsRead(conversationId: number) {
   return apiRequest<{ message: string }>(
     `/conversations/${conversationId}/mark-read`,
     {
-      method: "POST"
+      method: "POST",
+      credentials: "include",
     }
   );
 }
