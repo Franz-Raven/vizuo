@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import ChatList from "@/components/messaging/chat-list"
 import ChatWindow from "@/components/messaging/chat-window"
 import { 
@@ -14,6 +14,7 @@ import {
 import { getProfile } from "@/lib/api/profile"
 import { toast } from "sonner"
 import Header from "@/components/header"
+import { webSocketService } from "@/lib/api/websocket";
 import BackgroundBlobs from "@/components/background-blobs"
 import { Search, UserPlus, X } from "lucide-react"
 import type { 
@@ -44,14 +45,89 @@ export default function MessagingPage() {
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
 
+  const [isWsConnected, setIsWsConnected] = useState(false)
+  const [typingUsers, setTypingUsers] = useState<Record<number, boolean>>({})
+
   const getOtherUserFromConversation = (conversation: Conversation): User | undefined => {
-    // According to your types, conversations have participants array
     if (conversation.participants && conversation.participants.length > 0) {
-      // Find the participant that is not the current user
       return conversation.participants.find(p => p.id !== currentUser?.id)
     }
     return undefined
   }
+
+    useEffect(() => {
+    if (currentUser?.id) {
+      console.log("Connecting WebSocket for user:", currentUser.id)
+      webSocketService
+        .connect(currentUser.id)
+        .then(() => {
+          setIsWsConnected(true)
+          console.log("WebSocket connected successfully")
+        })
+        .catch((error) => {
+          console.error("Failed to connect WebSocket:", error)
+          toast.error("Real-time messaging unavailable")
+        })
+
+      return () => {
+        console.log("🔌 Disconnecting WebSocket")
+        webSocketService.disconnect()
+        setIsWsConnected(false)
+      }
+    }
+  }, [currentUser?.id])
+
+  useEffect(() => {
+    if (!selectedConversation?.id || !isWsConnected) return
+
+    console.log("Subscribing to conversation:", selectedConversation.id)
+
+    const unsubscribe = webSocketService.subscribeToMessages(
+      selectedConversation.id,
+      (newMessage: Message) => {
+        console.log("Received WebSocket message:", newMessage)
+        
+        setMessages((prev) => {
+          if (prev.some(m => m.id === newMessage.id)) {
+            return prev
+          }
+          return [...prev, newMessage]
+        })
+        
+        // update last message in conversations list
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.id === selectedConversation.id
+              ? { ...conv, lastMessage: newMessage, lastMessageAt: newMessage.sentAt }
+              : conv
+          )
+        )
+      }
+    )
+
+    return unsubscribe
+  }, [selectedConversation?.id, isWsConnected])
+
+  useEffect(() => {
+    if (!selectedConversation?.id || !isWsConnected) return
+
+    const unsubscribe = webSocketService.subscribeToTyping(
+      selectedConversation.id,
+      ({ isTyping, userId }: { isTyping: boolean; userId: number }) => {
+        console.log("Typing indicator:", { isTyping, userId })
+        setTypingUsers((prev) => {
+          if (isTyping) {
+            return { ...prev, [userId]: true }
+          } else {
+            const { [userId]: _, ...rest } = prev
+            return rest
+          }
+        })
+      }
+    )
+
+    return unsubscribe
+  }, [selectedConversation?.id, isWsConnected])
 
   useEffect(() => {
     fetchCurrentUser()
@@ -180,17 +256,37 @@ export default function MessagingPage() {
 
   const handleSendMessage = async (content: string): Promise<void> => {
     if (!selectedConversation || !currentUser) return
-    
     try {
-      const response = await sendMessage(selectedConversation.id, content);
-      setMessages(prev => [...prev, response.message])
-      await fetchConversations() // refresh to update last message
-      toast.success("Message sent!")
+      if (isWsConnected) {
+        console.log("Sending message via WebSocket")
+        webSocketService.sendMessage(selectedConversation.id, content)
+      }
+      else {
+        console.log("Sending message via REST API instead")
+        const response = await sendMessage(selectedConversation.id, content);
+        setMessages(prev => [...prev, response.message])
+        await fetchConversations() // refresh to update last message
+        toast.success("Message sent!")
+      }
     } catch (error) {
-      toast.error("Failed to send message")
-      console.error("Send message error:", error)
-    }
+        console.error("Send message error:", error)
+        toast.error("Failed to send message")
+      }
   }
+
+  const handleTyping = useCallback(() => {
+    if (selectedConversation?.id && isWsConnected) {
+      webSocketService.sendTyping(selectedConversation.id, true)
+      setTimeout(() => {
+        if (selectedConversation?.id) {
+          webSocketService.sendTyping(selectedConversation.id, false)
+        }
+      }, 2000)
+    }
+  }, [selectedConversation?.id, isWsConnected])
+
+  const isOtherUserTyping = Object.keys(typingUsers).length > 0 && 
+    Object.values(typingUsers).some(typing => typing)
 
   const handleMarkAsRead = async (): Promise<void> => {
     if (!selectedConversation) return

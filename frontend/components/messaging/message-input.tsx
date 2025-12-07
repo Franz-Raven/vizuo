@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Smile, Paperclip } from "lucide-react";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 type MessageInputProps = {
   onSend: (content: string) => void;
+  onTyping?: () => void;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -15,11 +16,25 @@ type MessageInputProps = {
 
 function MessageInput({
   onSend,
+  onTyping,
   disabled = false,
   placeholder = "Type a message...",
   className,
 }: MessageInputProps) {
   const [input, setInput] = useState("");
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    
+    if (onTyping && e.target.value.trim()) {
+      onTyping();
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+  };
 
   const handleSubmit = () => {
     if (input.trim() && !disabled) {
@@ -51,7 +66,7 @@ function MessageInput({
       <div className="flex-1 relative">
         <Textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="min-h-[40px] max-h-32 pr-12 resize-none"
@@ -70,7 +85,7 @@ function MessageInput({
         </Button>
       </div>
 
-      {/* Send button */}
+      {/* send button */}
       <Button
         onClick={handleSubmit}
         disabled={disabled || !input.trim()}
