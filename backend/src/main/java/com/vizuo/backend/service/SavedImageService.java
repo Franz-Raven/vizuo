@@ -55,7 +55,7 @@ public class SavedImageService {
     }
 
     public List<SavedImageResponse> getSavedImagesByIds(Long userId, List<Long> ids) {
-        User user = userRepository.findById(userId).orElseThrow();
+        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return savedImageRepository.findAllById(ids)
                 .stream()
                 .filter(si -> si.getUser().getId().equals(userId))
