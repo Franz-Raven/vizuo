@@ -42,6 +42,15 @@ function ChatWindow({
   }, [messages, isOtherUserTyping]);
 
   useEffect(() => {
+  const timer = setTimeout(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, 100);
+  return () => clearTimeout(timer);
+}, [conversation?.id]);
+
+  useEffect(() => {
     if (conversation?.id && conversation.unreadCount > 0) {
       onMarkAsRead();
     }
