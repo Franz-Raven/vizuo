@@ -1,7 +1,9 @@
 package com.vizuo.backend.service;
 
+import com.vizuo.backend.dto.AttachmentInfo;
 import com.vizuo.backend.dto.ImageResponse;
 import com.vizuo.backend.entity.Image;
+import com.vizuo.backend.entity.ImageAttachment;
 import com.vizuo.backend.entity.Keyword;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.repository.ImageRepository;
@@ -39,8 +41,7 @@ public class ImageService {
             String description,
             List<String> keywords,
             List<MultipartFile> previewFiles,
-            List<MultipartFile> attachmentFiles
-    ) {
+            List<MultipartFile> attachmentFiles) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -52,25 +53,26 @@ public class ImageService {
         String thumbnailUrl = null;
         if (previewFiles != null && !previewFiles.isEmpty()) {
             try {
-                thumbnailUrl = cloudinaryService.uploadImage(previewFiles.get(0), "thumbnails");
+                CloudinaryUploadResult uploadResult = cloudinaryService.uploadImageWithMeta(previewFiles.get(0), "thumbnails");
+                thumbnailUrl = uploadResult.getUrl();
             } catch (Exception e) {
                 throw new RuntimeException("Failed to upload thumbnail: " + e.getMessage());
             }
         }
         image.setThumbnailUrl(thumbnailUrl);
 
-        List<String> attachmentUrls = new ArrayList<>();
+        List<ImageAttachment> attachments = new ArrayList<>();
         if (attachmentFiles != null && !attachmentFiles.isEmpty()) {
             for (MultipartFile file : attachmentFiles) {
                 try {
-                    String url = cloudinaryService.uploadImage(file, "attachments");
-                    attachmentUrls.add(url);
+                    CloudinaryUploadResult uploadResult = cloudinaryService.uploadImageWithMeta(file, "attachments");
+                    attachments.add(new ImageAttachment(uploadResult.getUrl(), uploadResult.getFormat()));
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to upload attachment: " + e.getMessage());
                 }
             }
         }
-        image.setAttachmentUrls(attachmentUrls);
+        image.setAttachments(attachments);
 
         Image savedImage = imageRepository.save(image);
 
@@ -129,25 +131,29 @@ public class ImageService {
     private ImageResponse toResponse(Image image) {
         long likesCount = likeService.getLikeCountForImage(image.getId());
         String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
-        
+        String uploaderAvatar = image.getUser() != null ? image.getUser().getAvatar() : null;
+        List<AttachmentInfo> attachments = buildAttachmentInfoList(image);
+
         return new ImageResponse(
                 image.getId(),
                 image.getFileName(),
                 image.getDescription(),
                 keywordService.toNameList(image.getKeywords()),
                 image.getThumbnailUrl(),
-                image.getAttachmentUrls(),
+                attachments,
                 image.getCreatedAt(),
                 likesCount,
-                uploaderUsername
-        );
+                uploaderUsername,
+                uploaderAvatar);
     }
 
     private ImageResponse toResponse(Image image, Long currentUserId) {
         long likesCount = likeService.getLikeCountForImage(image.getId());
         String uploaderUsername = image.getUser() != null ? image.getUser().getUsername() : null;
+        String uploaderAvatar = image.getUser() != null ? image.getUser().getAvatar() : null;
         boolean likedByCurrentUser = currentUserId != null &&
                 likeService.hasUserLikedImage(image.getId(), currentUserId);
+        List<AttachmentInfo> attachments = buildAttachmentInfoList(image);
 
         return new ImageResponse(
                 image.getId(),
@@ -155,12 +161,22 @@ public class ImageService {
                 image.getDescription(),
                 keywordService.toNameList(image.getKeywords()),
                 image.getThumbnailUrl(),
-                image.getAttachmentUrls(),
+                attachments,
                 image.getCreatedAt(),
                 likesCount,
                 uploaderUsername,
-                likedByCurrentUser
-        );
+                uploaderAvatar,
+                likedByCurrentUser);
+    }
+
+    private List<AttachmentInfo> buildAttachmentInfoList(Image image) {
+        List<AttachmentInfo> result = new ArrayList<>();
+        if (image.getAttachments() != null) {
+            for (ImageAttachment attachment : image.getAttachments()) {
+                result.add(new AttachmentInfo(attachment.getUrl(), attachment.getFormat()));
+            }
+        }
+        return result;
     }
 
     public ImageResponse likeImage(Long imageId, String email) {

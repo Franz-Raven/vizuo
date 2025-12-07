@@ -15,4 +15,5 @@ export interface AssetGridProps {
   onToggleLike: (id: number, currentlyLiked: boolean) => void;
   savedImageIds: number[];
   onToggleSave: (imageId: number) => void;
+  onSelect: (id: number) => void;
 }

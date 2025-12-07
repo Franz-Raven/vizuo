@@ -37,8 +37,7 @@ public class Image {
 
     @ElementCollection
     @CollectionTable(name = "image_attachments", joinColumns = @JoinColumn(name = "image_id"))
-    @Column(name = "attachment_url")
-    private List<String> attachmentUrls;
+    private List<ImageAttachment> attachments;
 
     @Column(name = "is_premium")
     private Boolean isPremium = false;
@@ -83,8 +82,8 @@ public class Image {
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
-    public List<String> getAttachmentUrls() { return attachmentUrls; }
-    public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }
+    public List<ImageAttachment> getAttachments() { return attachments;}
+    public void setAttachments(List<ImageAttachment> attachments) { this.attachments = attachments;}
 
     public Boolean getPremium() { return isPremium; }
     public void setPremium(Boolean premium) { isPremium = premium; }

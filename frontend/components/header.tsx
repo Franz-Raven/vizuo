@@ -132,11 +132,11 @@ export default function Header() {
 
               {open && (
                 <div
-                  className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-popover shadow-lg shadow-black/20"
+                  className="absolute right-0 p-2 mt-2 w-64 rounded-2xl border border-border bg-popover shadow-lg shadow-black/20"
                   role="menu"
                 >
-                  <div className="flex items-center gap-3 border-b border-border/60 px-4 py-3">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-muted">
+                  <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
                       {user?.avatar ? (
                         <img
                           src={user.avatar}
@@ -148,7 +148,7 @@ export default function Header() {
                       )}
                     </div>
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">
                         {user?.username ?? "Loading..."}
                       </p>
@@ -158,7 +158,7 @@ export default function Header() {
                     </div>
                   </div>
 
-                  <div className="py-1">
+                  <div>
                     <button
                       type="button"
                       onClick={handleProfile}
@@ -169,11 +169,11 @@ export default function Header() {
                     </button>
                   </div>
 
-                  <div className="border-t border-border/60">
+                  <div className="border-t border-border">
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full px-4 py-3 text-left text-sm font-semibold text-red-500 hover:bg-muted"
+                      className="w-full px-4 py-2 text-left text-sm font-semibold rounded-bl-xl rounded-br-xl text-red-500 hover:bg-muted"
                       role="menuitem"
                     >
                       Log out

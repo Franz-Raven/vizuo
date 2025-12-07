@@ -7,6 +7,11 @@ export interface Moodboard {
   isPrivate: boolean;
   createdAt: string;
   savedImageIds: number[];
+  userId?: number;
+  username?: string;
+  saveCount?: number;
+  isSaved?: boolean;
+  previewImages?: string[];
 }
 
 export interface MoodboardCreatePayload {
@@ -33,4 +38,7 @@ export interface OrganizeModalProps {
   onCreateBoardWithImages: (
     savedImageIds: number[]
   ) => Promise<void> | void;
+  mode?: "multi" | "single";
+  preselectedSavedIds?: number[];
+  disableBack?: boolean;
 }

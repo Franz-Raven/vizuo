@@ -54,13 +54,23 @@ public class SavedImageService {
                 .collect(Collectors.toList());
     }
 
+    public List<SavedImageResponse> getSavedImagesByIds(Long userId, List<Long> ids) {
+        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return savedImageRepository.findAllById(ids)
+                .stream()
+                .filter(si -> si.getUser().getId().equals(userId))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private SavedImageResponse toResponse(SavedImage savedImage) {
         SavedImageResponse res = new SavedImageResponse();
         res.setId(savedImage.getId());
         res.setImageId(savedImage.getImage().getId());
         res.setThumbnailUrl(savedImage.getImage().getThumbnailUrl());
         res.setTitle(savedImage.getImage().getFileName());
-        res.setCreator(savedImage.getUser().getUsername());
+        // Set creator as the original uploader of the image, not the person who saved it
+        res.setCreator(savedImage.getImage().getUser().getUsername());
         res.setAddedAt(savedImage.getAddedAt());
         return res;
     }

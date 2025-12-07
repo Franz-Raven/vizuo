@@ -9,10 +9,11 @@ public class ImageResponse {
     private String description;
     private List<String> keywords;
     private String thumbnailUrl;
-    private List<String> attachmentUrls;
+    private List<AttachmentInfo> attachments;
     private LocalDateTime createdAt;
     private long likesCount;
     private String uploaderUsername;
+    private String uploaderAvatar;
     private boolean likedByCurrentUser;
 
     public ImageResponse() {}
@@ -23,20 +24,22 @@ public class ImageResponse {
             String description,
             List<String> keywords,
             String thumbnailUrl,
-            List<String> attachmentUrls,
+            List<AttachmentInfo> attachments,
             LocalDateTime createdAt,
             long likesCount,
-            String uploaderUsername
+            String uploaderUsername,
+            String uploaderAvatar
     ) {
         this.id = id;
         this.fileName = fileName;
         this.description = description;
         this.keywords = keywords;
         this.thumbnailUrl = thumbnailUrl;
-        this.attachmentUrls = attachmentUrls;
+        this.attachments = attachments;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
+        this.uploaderAvatar = uploaderAvatar;
         this.likedByCurrentUser = false;
     }
 
@@ -46,10 +49,11 @@ public class ImageResponse {
             String description,
             List<String> keywords,
             String thumbnailUrl,
-            List<String> attachmentUrls,
+            List<AttachmentInfo> attachments,
             LocalDateTime createdAt,
             long likesCount,
             String uploaderUsername,
+            String uploaderAvatar,
             boolean likedByCurrentUser
     ) {
         this.id = id;
@@ -57,10 +61,11 @@ public class ImageResponse {
         this.description = description;
         this.keywords = keywords;
         this.thumbnailUrl = thumbnailUrl;
-        this.attachmentUrls = attachmentUrls;
+        this.attachments = attachments;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
+        this.uploaderAvatar = uploaderAvatar;
         this.likedByCurrentUser = likedByCurrentUser;
     }
 
@@ -79,8 +84,8 @@ public class ImageResponse {
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
-    public List<String> getAttachmentUrls() { return attachmentUrls; }
-    public void setAttachmentUrls(List<String> attachmentUrls) { this.attachmentUrls = attachmentUrls; }
+    public List<AttachmentInfo> getAttachments() { return attachments; }
+    public void setAttachments(List<AttachmentInfo> attachments) { this.attachments = attachments; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -90,6 +95,9 @@ public class ImageResponse {
 
     public String getUploaderUsername() { return uploaderUsername; }
     public void setUploaderUsername(String uploaderUsername) { this.uploaderUsername = uploaderUsername; }
+
+    public String getUploaderAvatar() { return uploaderAvatar; }
+    public void setUploaderAvatar(String uploaderAvatar) { this.uploaderAvatar = uploaderAvatar; }
 
     public boolean isLikedByCurrentUser() { return likedByCurrentUser; }
     public void setLikedByCurrentUser(boolean likedByCurrentUser) { this.likedByCurrentUser = likedByCurrentUser; }
