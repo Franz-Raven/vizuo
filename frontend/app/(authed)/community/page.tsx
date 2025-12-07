@@ -22,13 +22,6 @@ export default function CommunityPage() {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      router.push("/landing");
-    }
-  }, [router]);
-
-  useEffect(() => {
     loadMoodboards();
   }, [activeTab]);
 

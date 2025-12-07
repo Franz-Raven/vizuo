@@ -43,13 +43,6 @@ export default function HomePage() {
   const [organizeSavedIds, setOrganizeSavedIds] = useState<number[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      router.push("/landing");
-    }
-  }, [router]);
-
-  useEffect(() => {
     async function fetchData() {
       try {
         const [assetsData, savedData, boardData] = await Promise.all([
