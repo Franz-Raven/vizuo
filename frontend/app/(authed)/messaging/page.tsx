@@ -185,7 +185,7 @@ export default function MessagingPage() {
     if (!selectedConversation || !currentUser) return
     
     try {
-      const response = await sendMessage(selectedConversation.id, { content })
+      const response = await sendMessage(selectedConversation.id, content);
       setMessages(prev => [...prev, response.message])
       await fetchConversations() // refresh to update last message
       toast.success("Message sent!")

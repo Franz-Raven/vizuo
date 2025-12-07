@@ -1,57 +1,18 @@
 import { apiRequest } from "@/lib/api";
-import type {
-  Conversation,
-  Message,
-  User
-} from "@/types/messaging";
+import type { Conversation, Message, User } from "@/types/messaging";
 
-export interface SendMessageRequest {
-  content: string;
-  attachmentId?: number;
+export async function getConversations() {
+  return apiRequest<{ conversations: Conversation[] }>("/conversations");
 }
 
-export interface GetConversationsResponse {
-  conversations: Conversation[];
-}
-
-export interface GetConversationMessagesResponse {
-  messages: Message[];
-}
-
-export interface GetOrCreateConversationResponse {
-  conversationId: number;
-  message?: string;
-}
-
-export interface SendMessageResponse {
-  message: Message;
-  status: string;
-}
-
-export interface SearchUsersResponse {
-  users: User[];
-}
-
-export interface UnreadCountResponse {
-  unreadCount: number;
-}
-
-export async function getConversations(): Promise<GetConversationsResponse> {
-  return apiRequest<GetConversationsResponse>("/conversations");
-}
-
-export async function getConversationMessages(
-  conversationId: number
-): Promise<GetConversationMessagesResponse> {
-  return apiRequest<GetConversationMessagesResponse>(
+export async function getConversationMessages(conversationId: number) {
+  return apiRequest<{ messages: Message[] }>(
     `/conversations/${conversationId}/messages`
   );
 }
 
-export async function getOrCreateConversation(
-  otherUserId: number
-): Promise<GetOrCreateConversationResponse> {
-  return apiRequest<GetOrCreateConversationResponse>(
+export async function getOrCreateConversation(otherUserId: number) {
+  return apiRequest<{ conversationId: number; message?: string }>(
     `/conversations/with/${otherUserId}`,
     {
       method: "POST"
@@ -59,22 +20,17 @@ export async function getOrCreateConversation(
   );
 }
 
-export async function sendMessage(
-  conversationId: number,
-  data: SendMessageRequest
-): Promise<SendMessageResponse> {
-  return apiRequest<SendMessageResponse>(
+export async function sendMessage(conversationId: number, content: string) {
+  return apiRequest<{ message: Message; status: string }>(
     `/conversations/${conversationId}/messages`,
     {
       method: "POST",
-      body: JSON.stringify(data)
+      body: JSON.stringify({ content })
     }
   );
 }
 
-export async function markConversationAsRead(
-  conversationId: number
-): Promise<{ message: string }> {
+export async function markConversationAsRead(conversationId: number) {
   return apiRequest<{ message: string }>(
     `/conversations/${conversationId}/mark-read`,
     {
@@ -83,14 +39,12 @@ export async function markConversationAsRead(
   );
 }
 
-export async function searchUsers(
-  query: string
-): Promise<SearchUsersResponse> {
-  return apiRequest<SearchUsersResponse>(
+export async function searchUsers(query: string) {
+  return apiRequest<{ users: User[] }>(
     `/conversations/search-users?query=${encodeURIComponent(query)}`
   );
 }
 
-export async function getUnreadCount(): Promise<UnreadCountResponse> {
-  return apiRequest<UnreadCountResponse>("/conversations/unread-count");
+export async function getUnreadCount() {
+  return apiRequest<{ unreadCount: number }>("/conversations/unread-count");
 }
