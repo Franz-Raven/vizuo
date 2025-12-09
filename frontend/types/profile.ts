@@ -28,3 +28,20 @@ export interface ProfileUpdatePayload {
   avatar?: string;
   coverImage?: string;
 }
+
+// for assets 
+export interface ProfileAsset {
+  id: number;
+  imageUrl: string;
+  title: string;
+  type: 'space' | 'upload' | 'favorite';
+  createdAt?: string;
+  likesCount?: number;
+}
+
+export interface ProfileResponse {
+  user: UserProfile;
+  spaceItems: ProfileAsset[];
+  uploads: ProfileAsset[];
+  favorites: ProfileAsset[];
+}
