@@ -85,7 +85,6 @@ function MessageInput({
         </Button>
       </div>
 
-      {/* send button */}
       <Button
         onClick={handleSubmit}
         disabled={disabled || !input.trim()}
