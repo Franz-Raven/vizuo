@@ -4,6 +4,8 @@ import com.vizuo.backend.entity.Like;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
+import com.vizuo.backend.entity.User;
+import java.util.List;
 
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
@@ -14,4 +16,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     boolean existsByImage_IdAndUser_Id(Long imageId, Long userId);
 
     void deleteByImage_IdAndUser_Id(Long imageId, Long userId);
+
+    List<Like> findByUser(User user);
 }

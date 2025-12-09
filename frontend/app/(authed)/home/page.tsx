@@ -166,8 +166,8 @@ export default function HomePage() {
 
       setOrganizeSavedIds([finalSaved.id]);
       setIsOrganizeOpen(true);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   };
 

@@ -111,7 +111,6 @@ export interface MessagingState {
   error: string | null;
 }
 
-// WebSocket event types but no websocket code yet
 export interface NewWebsocketMessageEvent {
   type: "NEW_MESSAGE";
   payload: Message;

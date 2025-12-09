@@ -4,14 +4,15 @@ import { useState, useEffect } from "react"
 import BackgroundBlobs from "@/components/background-blobs"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { getProfile, updateProfile, uploadImage } from "@/lib/api/profile"
+import { getProfile, getProfileAssets, updateProfile, uploadImage } from "@/lib/api/profile"
+import { ProfileAsset } from "@/types/profile"
 import Header from "@/components/header"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
-  const [isEditingCover, setIsEditingCover] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingAssets, setLoadingAssets] = useState(true)
 
   const [user, setUser] = useState({
     username: "",
@@ -22,44 +23,15 @@ export default function ProfilePage() {
 
   const [editForm, setEditForm] = useState({ ...user })
 
-  // Mock boards/content data
-  const spaceItems = [
-    {
-      id: 1,
-      image: "https://i.pinimg.com/736x/0b/cc/6e/0bcc6ec00b417c9ee1f0be258e018fbb.jpg",
-      title: "Spiderpunk Collection"
-    },
-    {
-      id: 2,
-      image: "https://i.pinimg.com/1200x/38/ed/fa/38edfa3d653bfd96611e202ebc9c3d8d.jpg",
-      title: "Cyber Aesthetics"
-    },
-    {
-      id: 3,
-      image: "https://i.pinimg.com/736x/7a/52/f8/7a52f89bc4b4598fe50d7a749110c853.jpg",
-      title: "Street Art"
-    },
-    {
-      id: 4,
-      image: "https://i.pinimg.com/736x/2b/76/fb/2b76fb6008c1b5e2841c156a50b90d4a.jpg",
-      title: "Urban Photography"
-    },
-    {
-      id: 5,
-      image: "https://i.pinimg.com/736x/42/91/ec/4291ecdf87037abc45712311f89e236d.jpg",
-      title: "Retro Vibes"
-    },
-    {
-      id: 6,
-      image: "https://i.pinimg.com/1200x/0c/e2/7f/0ce27f9fd5acd5a500e8458746bb4e2c.jpg",
-      title: "Pop Culture"
-    },
-  ]
+  const [spaceItems, setSpaceItems] = useState<ProfileAsset[]>([])
+  const [uploads, setUploads] = useState<ProfileAsset[]>([])
+  const [favorites, setFavorites] = useState<ProfileAsset[]>([])
 
   const tabs = ["Space", "Uploads", "Favorites"]
 
   useEffect(() => {
     fetchUserData()
+    fetchProfileAssets()
   }, [])
 
   const fetchUserData = async () => {
@@ -75,6 +47,35 @@ export default function ProfilePage() {
       setIsLoading(false)
     }
   }
+
+  const fetchProfileAssets = async () => {
+    try {
+      setLoadingAssets(true)
+      const response = await getProfileAssets()
+      
+      setSpaceItems(response.spaceItems || [])
+      setUploads(response.uploads || [])
+      setFavorites(response.favorites || [])
+      
+    } catch (error) {
+      toast.error('Failed to load profile assets');
+      console.error('Assets fetch error:', error);
+    } finally {
+      setLoadingAssets(false)
+    }
+  }
+
+   const getCurrentItems = () => {
+    switch(activeTab) {
+      case "Space": return spaceItems
+      case "Uploads": return uploads
+      case "Favorites": return favorites
+      default: return spaceItems
+    }
+  }
+
+  const currentItems = getCurrentItems()
+
 
   const handleImageUpload = async (file: File, type: 'avatar' | 'cover') => {
     try {
@@ -180,7 +181,7 @@ export default function ProfilePage() {
                 />
               )}
             </div>
-
+{/* if user is editing profile */}
             <div className="flex items-end justify-center relative -mt-16">
               <div className="relative">
                 <div className="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-[#A99DFF] via-[#8B7FCC] to-[#655E99] p-1 shadow-xl">
@@ -288,39 +289,70 @@ export default function ProfilePage() {
                   : "bg-card border border-border hover:border-primary/50 text-foreground"
                 }`}
             >
-              {tab}
+               {tab} {tab === "Space"}
+                       {tab === "Uploads"}
+                       {tab === "Favorites"}
             </button>
           ))}
         </div>
 
 {/* content */}
-        <div className="max-w-7xl mx-auto px-6 pb-16">
-          <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
-            {spaceItems.map((item) => (
-              <div
-                key={item.id}
-                className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card border border-border cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
-              >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-auto object-cover"
-                  loading="lazy"
-                />
-
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <Button className="bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 shadow-lg border border-primary/20">
-                    View
-                  </Button>
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <p className="text-white text-sm font-semibold truncate">{item.title}</p>
-                </div>
+         {loadingAssets ? (
+            <div className="flex justify-center py-12">
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-10 w-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading {activeTab.toLowerCase()}...</p>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ) : currentItems.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="w-24 h-24 mx-auto rounded-full bg-card flex items-center justify-center mb-6">
+                  <span className="text-3xl text-muted-foreground">
+                    {activeTab === "Space" ? "🎨" : 
+                     activeTab === "Uploads" ? "📤" : "❤️"}
+                  </span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
+                  No {activeTab.toLowerCase()} yet
+                </h3>
+                <p className="text-muted-foreground">
+                  {activeTab === "Space" && "Create your custom art space by saving images"}
+                  {activeTab === "Uploads" && "Upload your first artwork to get started"}
+                  {activeTab === "Favorites" && "Like some images to see them here"}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
+              {currentItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card border border-border cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-auto object-cover"
+                    loading="lazy"
+                  />
+{/* not yet working view btn */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <Button className="bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 shadow-lg border border-primary/20">
+                      View
+                    </Button>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <p className="text-white text-sm font-semibold truncate">{item.title}</p>
+                    {item.likesCount !== undefined && (
+                      <p className="text-white/80 text-xs mt-1">❤️ {item.likesCount} likes</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
       </main>
     </div>
   )

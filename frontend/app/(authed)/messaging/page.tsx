@@ -66,7 +66,6 @@ export default function MessagingPage() {
       })
       .catch((error) => {
         console.error("Failed to connect WebSocket:", error);
-        toast.error("Real-time messaging unavailable");
         setIsWsConnected(false);
       });
   }
@@ -206,11 +205,10 @@ export default function MessagingPage() {
         })
         .filter((id): id is number => id !== undefined)
       
-      // Filter out current user and users you already have conversations with
+      // only filter out current user
       const filteredResults = response.users.filter(
         (user: User) => 
-          user.id !== currentUser?.id && 
-          !existingUserIds.includes(user.id)
+          user.id !== currentUser?.id 
       )
       
       setSearchResults(filteredResults)

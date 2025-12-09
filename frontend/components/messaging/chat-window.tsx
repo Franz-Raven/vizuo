@@ -5,7 +5,7 @@ import { Conversation, Message } from "@/types/messaging";
 import MessageBubble from "./message-bubble";
 import MessageInput from "./message-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MoreVertical } from "lucide-react";
 
