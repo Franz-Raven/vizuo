@@ -289,9 +289,9 @@ export default function ProfilePage() {
                   : "bg-card border border-border hover:border-primary/50 text-foreground"
                 }`}
             >
-               {tab} {tab === "Space" && `(${spaceItems.length})`}
-                       {tab === "Uploads" && `(${uploads.length})`}
-                       {tab === "Favorites" && `(${favorites.length})`}
+               {tab} {tab === "Space"}
+                       {tab === "Uploads"}
+                       {tab === "Favorites"}
             </button>
           ))}
         </div>
@@ -336,7 +336,7 @@ export default function ProfilePage() {
                     className="w-full h-auto object-cover"
                     loading="lazy"
                   />
-
+{/* not yet working view btn */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <Button className="bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 shadow-lg border border-primary/20">
                       View

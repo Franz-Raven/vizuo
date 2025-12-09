@@ -3,7 +3,9 @@ import {
   GetProfileResponse,
   UpdateProfileResponse,
   UploadImageResponse,
-  ProfileUpdatePayload
+  ProfileUpdatePayload,
+  ProfileResponse,
+  ProfileAsset
 } from "@/types/profile";
 
 export async function getProfile() {
@@ -15,6 +17,22 @@ export async function updateProfile(profileData: ProfileUpdatePayload) {
     method: "PUT",
     body: JSON.stringify(profileData)
   });
+}
+
+export async function getProfileAssets() {
+  return apiRequest<ProfileResponse>("/profile/assets");
+}
+
+export async function getProfileSpaceItems() {
+  return apiRequest<{ items: ProfileAsset[] }>("/profile/space");
+}
+
+export async function getProfileUploads() {
+  return apiRequest<{ items: ProfileAsset[] }>("/profile/uploads");
+}
+
+export async function getProfileFavorites() {
+  return apiRequest<{ items: ProfileAsset[] }>("/profile/favorites");
 }
 
 export async function uploadImage(file: File, type: string) {

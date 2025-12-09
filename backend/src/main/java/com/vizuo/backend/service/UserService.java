@@ -1,19 +1,31 @@
 package com.vizuo.backend.service;
 
 import com.vizuo.backend.dto.ProfileUpdateRequest;
+import com.vizuo.backend.entity.Image;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.vizuo.backend.repository.LikeRepository;
+import com.vizuo.backend.repository.ImageRepository;
+import com.vizuo.backend.repository.MoodboardRepository;
+import com.vizuo.backend.dto.ProfileAssetDTO;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
+    private final LikeRepository likeRepository;
+    private final MoodboardRepository moodboardRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, MoodboardRepository moodboardRepository, ImageRepository imageRepository, LikeRepository likeRepository) {
         this.userRepository = userRepository;
+        this.moodboardRepository = moodboardRepository;
+        this.imageRepository = imageRepository;
+        this.likeRepository = likeRepository;
     }
 
     public User getUserById(Long id) {
@@ -77,4 +89,81 @@ public class UserService {
         }
         userRepository.save(user);
     }
+
+// for profile assets
+    public List<ProfileAssetDTO> getUserSpaceItems(Long userId) {
+    User user = getUserById(userId);
+    return moodboardRepository.findByUser(user).stream()
+            .map(moodboard -> {
+                String thumbnailUrl = "https://via.placeholder.com/300x200/333/fff?text=No+Image";
+                int itemCount = 0;
+                
+                if (moodboard.getSavedImages() != null && !moodboard.getSavedImages().isEmpty()) {
+                    thumbnailUrl = moodboard.getSavedImages().stream()
+                            .findFirst()
+                            .map(savedImage -> savedImage.getImage().getThumbnailUrl())
+                            .orElse(thumbnailUrl);
+                    itemCount = moodboard.getSavedImages().size();
+                }
+                
+                return ProfileAssetDTO.builder()
+                    .id(moodboard.getId())
+                    .imageUrl(thumbnailUrl)
+                    .title(moodboard.getName())
+                    .type("space")
+                    .createdAt(moodboard.getCreatedAt() != null ? moodboard.getCreatedAt().toString() : "")
+                    .itemCount(itemCount)
+                    .build();
+            })
+            .collect(Collectors.toList());
+}
+
+public List<ProfileAssetDTO> getUserUploads(Long userId) {
+    User user = getUserById(userId);
+    return imageRepository.findByUser(user).stream()
+            .map(image -> {
+                long likesCount = likeRepository.countByImage_Id(image.getId());
+                
+                return ProfileAssetDTO.builder()
+                    .id(image.getId())
+                    .imageUrl(image.getThumbnailUrl())
+                    .title(image.getFileName())
+                    .type("upload")
+                    .createdAt(image.getCreatedAt() != null ? image.getCreatedAt().toString() : "")
+                    .likesCount((int) likesCount)
+                    .downloadsCount(0)
+                    .build();
+            })
+            .collect(Collectors.toList());
+}
+
+public List<ProfileAssetDTO> getUserFavorites(Long userId) {
+    User user = getUserById(userId);
+    
+    return likeRepository.findByUser(user).stream()
+            .map(like -> {
+                Image image = like.getImage();
+                long likesCount = likeRepository.countByImage_Id(image.getId());
+                
+                return ProfileAssetDTO.builder()
+                    .id(image.getId())
+                    .imageUrl(image.getThumbnailUrl())
+                    .title(image.getFileName())
+                    .type("favorite")
+                    .likesCount((int) likesCount)
+                    .likedAt(like.getCreatedAt() != null ? like.getCreatedAt().toString() : "")
+                    .uploader(image.getUser() != null ? image.getUser().getUsername() : "Unknown")
+                    .build();
+            })
+            .collect(Collectors.toList());
+}
+
+    // combined method 
+    // public Map<String, Object> getAllProfileAssets(Long userId) {
+    //     return Map.of(
+    //         "spaceItems", getUserSpaceItems(userId),
+    //         "uploads", getUserUploads(userId),
+    //         "favorites", getUserFavorites(userId)
+    //     );
+    // }
 }
