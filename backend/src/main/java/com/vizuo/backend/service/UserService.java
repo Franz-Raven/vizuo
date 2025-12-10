@@ -7,8 +7,8 @@ import com.vizuo.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.vizuo.backend.repository.LikeRepository;
 import com.vizuo.backend.repository.ImageRepository;
-import com.vizuo.backend.repository.MoodboardRepository;
 import com.vizuo.backend.dto.ProfileAssetDTO;
+import com.vizuo.backend.repository.SavedImageRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,13 +19,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
     private final LikeRepository likeRepository;
-    private final MoodboardRepository moodboardRepository;
+    private final SavedImageRepository savedImageRepository;
 
-    public UserService(UserRepository userRepository, MoodboardRepository moodboardRepository, ImageRepository imageRepository, LikeRepository likeRepository) {
+    public UserService(UserRepository userRepository, ImageRepository imageRepository, LikeRepository likeRepository, SavedImageRepository savedImageRepository) {
         this.userRepository = userRepository;
-        this.moodboardRepository = moodboardRepository;
         this.imageRepository = imageRepository;
         this.likeRepository = likeRepository;
+        this.savedImageRepository = savedImageRepository;
     }
 
     public User getUserById(Long id) {
@@ -91,28 +91,22 @@ public class UserService {
     }
 
 // for profile assets
-    public List<ProfileAssetDTO> getUserSpaceItems(Long userId) {
+   public List<ProfileAssetDTO> getUserSpaceItems(Long userId) {
     User user = getUserById(userId);
-    return moodboardRepository.findByUser(user).stream()
-            .map(moodboard -> {
-                String thumbnailUrl = "https://via.placeholder.com/300x200/333/fff?text=No+Image";
-                int itemCount = 0;
-                
-                if (moodboard.getSavedImages() != null && !moodboard.getSavedImages().isEmpty()) {
-                    thumbnailUrl = moodboard.getSavedImages().stream()
-                            .findFirst()
-                            .map(savedImage -> savedImage.getImage().getThumbnailUrl())
-                            .orElse(thumbnailUrl);
-                    itemCount = moodboard.getSavedImages().size();
-                }
+    
+    // isSpaceItem = true
+    return savedImageRepository.findByUser(user).stream()
+            .filter(savedImage -> savedImage.isSpaceItem()) 
+            .map(savedImage -> {
+                Image image = savedImage.getImage();
                 
                 return ProfileAssetDTO.builder()
-                    .id(moodboard.getId())
-                    .imageUrl(thumbnailUrl)
-                    .title(moodboard.getName())
+                    .id(savedImage.getId()) 
+                    .imageUrl(image.getThumbnailUrl())
+                    .title(image.getFileName())
                     .type("space")
-                    .createdAt(moodboard.getCreatedAt() != null ? moodboard.getCreatedAt().toString() : "")
-                    .itemCount(itemCount)
+                    .createdAt(savedImage.getAddedAt() != null ? 
+                              savedImage.getAddedAt().toString() : "")
                     .build();
             })
             .collect(Collectors.toList());

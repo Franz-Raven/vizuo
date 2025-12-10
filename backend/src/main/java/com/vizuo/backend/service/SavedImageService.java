@@ -72,6 +72,37 @@ public class SavedImageService {
         // Set creator as the original uploader of the image, not the person who saved it
         res.setCreator(savedImage.getImage().getUser().getUsername());
         res.setAddedAt(savedImage.getAddedAt());
+        res.setSpaceItem(savedImage.isSpaceItem());
         return res;
+    }
+
+    // saved images in space
+    public List<SavedImageResponse> getSpaceImages(Long userId) {
+        List<SavedImage> spaceImages = savedImageRepository.findSpaceItemsByUserId(userId);
+        return spaceImages.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+    
+    // saved images not in space
+    public List<SavedImageResponse> getAvailableForSpace(Long userId) {
+        List<SavedImage> availableImages = savedImageRepository.findNonSpaceItemsByUserId(userId);
+        return availableImages.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+    
+    public void addToSpace(Long userId, Long savedImageId) {
+        int updated = savedImageRepository.addToSpace(savedImageId, userId);
+        if (updated == 0) {
+            throw new RuntimeException("Saved image not found or not owned by user");
+        }
+    }
+    
+    public void removeFromSpace(Long userId, Long savedImageId) {
+        int updated = savedImageRepository.removeFromSpace(savedImageId, userId);
+        if (updated == 0) {
+            throw new RuntimeException("Saved image not found or not owned by user");
+        }
     }
 }

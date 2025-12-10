@@ -22,6 +22,9 @@ public class SavedImage {
     @Column(name = "added_at")
     private LocalDateTime addedAt;
 
+    @Column(name = "is_space_item", nullable = false)
+    private boolean isSpaceItem = false;
+
     @PrePersist
     protected void onCreate() {
         if (addedAt == null) {
@@ -47,4 +50,7 @@ public class SavedImage {
 
     public LocalDateTime getAddedAt() { return addedAt; }
     public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
+
+    public boolean isSpaceItem() { return isSpaceItem; }
+    public void setSpaceItem(boolean spaceItem) { isSpaceItem = spaceItem; }
 }
