@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { Menu, X, HelpCircle, Moon, Sun, Bell, User, LayoutDashboard, LogOut } from "lucide-react"
+import { Menu, X, HelpCircle, Moon, Sun, Bell, User, LayoutDashboard, LogOut, Shield } from "lucide-react"
 import { getProfile } from "@/lib/api/profile"
 import { logoutUser } from "@/lib/api/auth"
 import { navItems } from "@/types/navigation"
@@ -63,6 +63,11 @@ export default function Header() {
   const handleDashboard = () => {
     setOpen(false)
     router.push("/dashboard")
+  }
+
+  const handleAdmin = () => {
+    setOpen(false)
+    router.push("/admin")
   }
 
   const handleLogout = async () => {
@@ -189,6 +194,18 @@ export default function Header() {
                     >
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                       <span>Dashboard</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleAdmin}
+                      className="flex w-full items-center gap-2 my-2 px-4 py-2 rounded-md text-sm hover:bg-muted"
+                      role="menuitem"
+                    >
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                      <span>Admin</span>
                     </button>
                   </div>
 
