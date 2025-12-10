@@ -8,6 +8,7 @@ import { logoutUser } from "@/lib/api/auth"
 import { navItems } from "@/types/navigation"
 import IconCell from "@/components/ui/icon-cell"
 import PrimaryButton from "./ui/primary-button"
+import SubscriptionModal from "@/components/subscription/subscription-modal"
 
 type HeaderUser = {
   username: string
@@ -23,6 +24,7 @@ export default function Header() {
   const [open, setOpen] = useState(false) // profile dropdown
   const [navOpen, setNavOpen] = useState(false) // mobile drawer
   const [isDark, setIsDark] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -112,8 +114,11 @@ export default function Header() {
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-3">
-            <PrimaryButton title="Subscriptions" />
-
+            <PrimaryButton 
+              title="Subscriptions" 
+              onClick={() => setShowSubscriptionModal(true)}
+            />
+    
             <div className="relative">
               <button
                 type="button"
@@ -292,6 +297,11 @@ export default function Header() {
           </aside>
         </div>
       )}
+
+      <SubscriptionModal 
+        isOpen={showSubscriptionModal} 
+        onClose={() => setShowSubscriptionModal(false)} 
+      />
     </>
   )
 }
