@@ -49,6 +49,9 @@ public class User {
     @Column(name = "reports_handled")
     private Integer reportsHandled = 0;
 
+    @Column(nullable = false)
+    private String status = "ACTIVE";
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
@@ -109,6 +112,9 @@ public class User {
 
     public Integer getReportsHandled() { return reportsHandled; }
     public void setReportsHandled(Integer reportsHandled) { this.reportsHandled = reportsHandled; }
+
+    public String getStatus() { return status;}
+    public void setStatus(String status) { this.status = status; }
 
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
