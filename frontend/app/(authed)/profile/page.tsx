@@ -7,12 +7,17 @@ import { toast } from "sonner"
 import { getProfile, getProfileAssets, updateProfile, uploadImage } from "@/lib/api/profile"
 import { ProfileAsset } from "@/types/profile"
 import Header from "@/components/header"
+import { getSpaceImages, getAvailableForSpace, addToSpace, removeFromSpace } from "@/lib/api/save-image"
+import { SavedImage } from "@/types/save-image"
+import { GripVertical, Plus, X } from "lucide-react"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Space")
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingAssets, setLoadingAssets] = useState(true)
+  const [isEditingSpace, setIsEditingSpace] = useState(false)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   const [user, setUser] = useState({
     username: "",
@@ -23,7 +28,8 @@ export default function ProfilePage() {
 
   const [editForm, setEditForm] = useState({ ...user })
 
-  const [spaceItems, setSpaceItems] = useState<ProfileAsset[]>([])
+  const [spaceImages, setSpaceImages] = useState<SavedImage[]>([])
+  const [availableImages, setAvailableImages] = useState<SavedImage[]>([])
   const [uploads, setUploads] = useState<ProfileAsset[]>([])
   const [favorites, setFavorites] = useState<ProfileAsset[]>([])
 
@@ -51,11 +57,18 @@ export default function ProfilePage() {
   const fetchProfileAssets = async () => {
     try {
       setLoadingAssets(true)
-      const response = await getProfileAssets()
-      
-      setSpaceItems(response.spaceItems || [])
-      setUploads(response.uploads || [])
-      setFavorites(response.favorites || [])
+
+      // isSpaceItem = true
+      const spaceImagesData = await getSpaceImages();
+      setSpaceImages(spaceImagesData);
+
+      // (isSpaceItem = false)
+      const availableImagesData = await getAvailableForSpace();
+      setAvailableImages(availableImagesData);
+
+      const response = await getProfileAssets();
+      setUploads(response.uploads || []);
+      setFavorites(response.favorites || []);
       
     } catch (error) {
       toast.error('Failed to load profile assets');
@@ -65,17 +78,95 @@ export default function ProfilePage() {
     }
   }
 
-   const getCurrentItems = () => {
-    switch(activeTab) {
-      case "Space": return spaceItems
-      case "Uploads": return uploads
-      case "Favorites": return favorites
-      default: return spaceItems
+  const handleAddToSpace = async (savedImageId: number) => {
+    try {
+      await addToSpace(savedImageId);
+      
+      const imageToAdd = availableImages.find(img => img.id === savedImageId);
+      if (imageToAdd) {
+        setAvailableImages(prev => prev.filter(img => img.id !== savedImageId));
+        setSpaceImages(prev => [...prev, { ...imageToAdd, spaceItem: true }]);
+      }
+      
+      toast.success("Added to space!");
+    } catch (error) {
+      console.error("Error adding to space:", error);
+      toast.error("Failed to add to space");
     }
-  }
+  };
 
-  const currentItems = getCurrentItems()
+  const handleRemoveFromSpace = async (savedImageId: number) => {
+    try {
+      await removeFromSpace(savedImageId);
+      
+      const imageToRemove = spaceImages.find(img => img.id === savedImageId);
+      if (imageToRemove) {
+        setSpaceImages(prev => prev.filter(img => img.id !== savedImageId));
+        setAvailableImages(prev => [...prev, { ...imageToRemove, spaceItem: false }]);
+      }
+      
+      toast.success("Removed from space!");
+    } catch (error) {
+      console.error("Error removing from space:", error);
+      toast.error("Failed to remove from space");
+    }
+  };
 
+  // Drag and Drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === index) return;
+    
+    const newOrder = [...spaceImages];
+    const draggedItem = newOrder[draggedIndex];
+    
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(index, 0, draggedItem);
+    
+    setSpaceImages(newOrder);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = async () => {
+    if (draggedIndex === null) return;
+    
+    try {
+      toast.success("Order updated!");
+    } catch (error) {
+      console.error("Error reordering:", error);
+      toast.error("Failed to update order");
+      fetchProfileAssets();
+    } finally {
+      setDraggedIndex(null);
+    }
+  };
+
+  const getCurrentItems = () => {
+    switch(activeTab) {
+      case "Space": 
+        if (isEditingSpace) {
+          return [];
+        } else {
+          // Show space images directly
+          return spaceImages.map(img => ({
+            id: img.id,
+            title: img.title,
+            imageUrl: img.thumbnailUrl,
+            type: "image" as const,
+          }));
+        }
+      case "Uploads": return uploads;
+      case "Favorites": return favorites;
+      default: return [];
+    }
+  };
+
+  const currentItems = getCurrentItems();
 
   const handleImageUpload = async (file: File, type: 'avatar' | 'cover') => {
     try {
@@ -145,7 +236,7 @@ export default function ProfilePage() {
       <BackgroundBlobs />
       <Header />  
       <main className="relative z-10 pt-16">
-{/* cover and profile */}
+        {/* cover and profile */}
         <div className="max-w-7xl mx-auto px-6 pt-8">
           <div className="relative">
             <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden shadow-2xl shadow-purple-300/30 group">
@@ -181,7 +272,7 @@ export default function ProfilePage() {
                 />
               )}
             </div>
-{/* if user is editing profile */}
+            {/* if user is editing profile */}
             <div className="flex items-end justify-center relative -mt-16">
               <div className="relative">
                 <div className="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-[#A99DFF] via-[#8B7FCC] to-[#655E99] p-1 shadow-xl">
@@ -241,7 +332,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-{/* info */}
+        {/* info */}
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-6">
           {isEditingProfile ? (
             <div className="max-w-md mx-auto space-y-4">
@@ -278,7 +369,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-{/* profile tabs */}
+        {/* profile tabs */}
         <div className="flex justify-center gap-3 px-6 mb-8 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((tab) => (
             <button
@@ -289,70 +380,187 @@ export default function ProfilePage() {
                   : "bg-card border border-border hover:border-primary/50 text-foreground"
                 }`}
             >
-               {tab} {tab === "Space"}
-                       {tab === "Uploads"}
-                       {tab === "Favorites"}
+              {tab}
             </button>
           ))}
         </div>
 
-{/* content */}
-         {loadingAssets ? (
-            <div className="flex justify-center py-12">
-              <div className="flex flex-col items-center gap-4">
-                <div className="h-10 w-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading {activeTab.toLowerCase()}...</p>
-              </div>
+        {/* content */}
+        {loadingAssets ? (
+          <div className="flex justify-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-10 w-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Loading {activeTab.toLowerCase()}...</p>
             </div>
-          ) : currentItems.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="max-w-md mx-auto">
-                <div className="w-24 h-24 mx-auto rounded-full bg-card flex items-center justify-center mb-6">
-                  <span className="text-3xl text-muted-foreground">
-                    {activeTab === "Space" ? "🎨" : 
-                     activeTab === "Uploads" ? "📤" : "❤️"}
-                  </span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">
-                  No {activeTab.toLowerCase()} yet
-                </h3>
-                <p className="text-muted-foreground">
-                  {activeTab === "Space" && "Create your custom art space by saving images"}
-                  {activeTab === "Uploads" && "Upload your first artwork to get started"}
-                  {activeTab === "Favorites" && "Like some images to see them here"}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
-              {currentItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card border border-border cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-6">
+            {/* Edit Space button */}
+            {activeTab === "Space" && (
+              <div className="flex justify-end mb-6">
+                <Button
+                  onClick={() => setIsEditingSpace(!isEditingSpace)}
+                  variant={isEditingSpace ? "default" : "outline"}
+                  className="flex items-center gap-2"
                 >
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-auto object-cover"
-                    loading="lazy"
-                  />
-{/* not yet working view btn */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <Button className="bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 shadow-lg border border-primary/20">
-                      View
-                    </Button>
-                  </div>
+                  {isEditingSpace ? "👁️ View Space" : "✏️ Edit Space"}
+                </Button>
+              </div>
+            )}
 
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <p className="text-white text-sm font-semibold truncate">{item.title}</p>
-                    {item.likesCount !== undefined && (
-                      <p className="text-white/80 text-xs mt-1">❤️ {item.likesCount} likes</p>
-                    )}
+            {/* empty content */}
+            {(activeTab === "Space" && !isEditingSpace && spaceImages.length === 0) || 
+             (activeTab !== "Space" && currentItems.length === 0) ? (
+              <div className="text-center py-16">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 mx-auto rounded-full bg-card flex items-center justify-center mb-6">
+                    <span className="text-3xl text-muted-foreground">
+                      {activeTab === "Space" ? "🎨" : 
+                      activeTab === "Uploads" ? "📤" : "❤️"}
+                    </span>
                   </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    No {activeTab.toLowerCase()} yet
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {activeTab === "Space" && "Add images to your space to see them here"}
+                    {activeTab === "Uploads" && "Upload your first artwork to get started"}
+                    {activeTab === "Favorites" && "Like some images to see them here"}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <>
+                {/* editing interface for space */}
+                {activeTab === "Space" && isEditingSpace ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* (left) current space items with drag and drop */}
+                    <div className="lg:col-span-2">
+                      <div className="bg-card border border-border rounded-xl p-4">
+                        <h3 className="font-semibold mb-4">
+                          Arrange Your Space ({spaceImages.length})
+                        </h3>
+                        
+                        {spaceImages.length === 0 ? (
+                          <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg">
+                            <p className="text-lg mb-2">No items in your space yet</p>
+                            <p className="text-sm">Add items from your saved assets →</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {spaceImages.map((image, index) => (
+                              <div
+                                key={image.id}
+                                draggable
+                                onDragStart={() => handleDragStart(index)}
+                                onDragOver={(e) => handleDragOver(e, index)}
+                                onDragEnd={handleDragEnd}
+                                className={`flex items-center gap-3 p-3 bg-background border-2 rounded-lg cursor-move transition-all ${
+                                  draggedIndex === index
+                                    ? "border-primary opacity-50 scale-95"
+                                    : "border-border hover:border-primary/50 hover:shadow-md"
+                                }`}
+                              >
+                                <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={image.thumbnailUrl}
+                                    alt={image.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">{image.title}</p>
+                                  <p className="text-sm text-muted-foreground">Position #{index + 1}</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleRemoveFromSpace(image.id)}
+                                  className="hover:bg-destructive hover:text-destructive-foreground"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* (right) add from available images */}
+                    <div>
+                      <div className="bg-card border border-border rounded-xl p-4 sticky top-6">
+                        <h3 className="font-semibold mb-4">Add from Saved Assets</h3>
+                        
+                        {availableImages.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p>All saved images are already in your space</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto pr-2">
+                            {availableImages.map(asset => (
+                              <div 
+                                key={asset.id} 
+                                className="p-2 bg-background border border-border rounded-lg hover:border-primary/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img
+                                      src={asset.thumbnailUrl}
+                                      alt={asset.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate">{asset.title}</p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleAddToSpace(asset.id)}
+                                    className="flex-shrink-0"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // grid view for all tabs
+                  <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
+                    {currentItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card border border-border cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
+                      >
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-auto object-cover"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Button className="bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 shadow-lg border border-primary/20">
+                            View
+                          </Button>
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <p className="text-white text-sm font-semibold truncate">{item.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )

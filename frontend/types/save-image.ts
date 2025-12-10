@@ -5,4 +5,5 @@ export interface SavedImage {
   thumbnailUrl: string;
   title: string;
   creator: string;
+  spaceItem: boolean;
 }

@@ -9,6 +9,7 @@ public class SavedImageResponse {
     private String title;
     private String creator;
     private LocalDateTime addedAt;
+    private boolean isSpaceItem;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -27,4 +28,7 @@ public class SavedImageResponse {
 
     public LocalDateTime getAddedAt() { return addedAt; }
     public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
+
+    public boolean isSpaceItem() { return isSpaceItem; }
+    public void setSpaceItem(boolean spaceItem) { isSpaceItem = spaceItem; }
 }
