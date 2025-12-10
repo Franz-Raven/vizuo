@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { Menu, X, HelpCircle, Moon, Sun, Bell } from "lucide-react"
+import { Menu, X, HelpCircle, Moon, Sun, Bell, User, LayoutDashboard, LogOut } from "lucide-react"
 import { getProfile } from "@/lib/api/profile"
 import { logoutUser } from "@/lib/api/auth"
 import { navItems } from "@/types/navigation"
@@ -28,19 +28,19 @@ export default function Header() {
 
   useEffect(() => {
     let active = true
-    ;(async () => {
-      try {
-        const res = await getProfile()
-        if (!active || !res?.user) return
-        setUser({
-          username: res.user.username,
-          email: res.user.email,
-          avatar: res.user.avatar,
-        })
-      } catch (err) {
-        console.error("Failed to load header user", err)
-      }
-    })()
+      ; (async () => {
+        try {
+          const res = await getProfile()
+          if (!active || !res?.user) return
+          setUser({
+            username: res.user.username,
+            email: res.user.email,
+            avatar: res.user.avatar,
+          })
+        } catch (err) {
+          console.error("Failed to load header user", err)
+        }
+      })()
     return () => {
       active = false
     }
@@ -58,6 +58,11 @@ export default function Header() {
   const handleProfile = () => {
     setOpen(false)
     router.push("/profile")
+  }
+
+  const handleDashboard = () => {
+    setOpen(false)
+    router.push("/dashboard")
   }
 
   const handleLogout = async () => {
@@ -167,10 +172,23 @@ export default function Header() {
                     <button
                       type="button"
                       onClick={handleProfile}
-                      className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-muted"
+                      className="flex w-full items-center gap-2 my-2 px-4 py-2 rounded-md text-sm hover:bg-muted"
                       role="menuitem"
                     >
+                      <User className="h-4 w-4 text-muted-foreground" />
                       <span>Profile</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleDashboard}
+                      className="flex w-full items-center gap-2 my-2 px-4 py-2 rounded-md text-sm hover:bg-muted"
+                      role="menuitem"
+                    >
+                      <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                      <span>Dashboard</span>
                     </button>
                   </div>
 
@@ -178,10 +196,11 @@ export default function Header() {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm font-semibold rounded-bl-xl rounded-br-xl text-red-500 hover:bg-muted"
+                      className="flex w-full items-center gap-2 mt-2 px-4 py-2 text-sm font-semibold rounded-md text-red-500 hover:bg-muted"
                       role="menuitem"
                     >
-                      Log out
+                      <LogOut className="h-4 w-4" />
+                      <span>Log out</span>
                     </button>
                   </div>
                 </div>

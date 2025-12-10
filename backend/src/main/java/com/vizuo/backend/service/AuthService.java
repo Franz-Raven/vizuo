@@ -7,6 +7,8 @@ import com.vizuo.backend.entity.Plan;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.entity.UserSubscription;
 import com.vizuo.backend.repository.PlanRepository;
+import com.vizuo.backend.entity.Role;
+import com.vizuo.backend.repository.RoleRepository;
 import com.vizuo.backend.repository.UserRepository;
 import com.vizuo.backend.repository.UserSubscriptionRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,13 +22,15 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RoleRepository roleRepository;
     private final PlanRepository planRepository;
     private final UserSubscriptionRepository userSubscriptionRepository;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, PlanRepository planRepository, UserSubscriptionRepository userSubscriptionRepository) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RoleRepository roleRepository, PlanRepository planRepository, UserSubscriptionRepository userSubscriptionRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.roleRepository = roleRepository;
         this.planRepository = planRepository;
         this.userSubscriptionRepository = userSubscriptionRepository;
     }
@@ -41,6 +45,10 @@ public class AuthService {
 
         String encoded = passwordEncoder.encode(request.getPassword());
         User user = new User(request.getEmail(), request.getUsername(), encoded);
+        Role designerRole = roleRepository.findByName("DESIGNER")
+        .orElseThrow(() -> new RuntimeException("Default role not found"));
+
+        user.getRoles().add(designerRole);
         userRepository.save(user);
 
         // Automatically assign Basic plan to new user
