@@ -403,7 +403,7 @@ export default function ProfilePage() {
                   variant={isEditingSpace ? "default" : "outline"}
                   className="flex items-center gap-2"
                 >
-                  {isEditingSpace ? "👁️ View Space" : "✏️ Edit Space"}
+                  {isEditingSpace ? "View Space" : "Edit Space"}
                 </Button>
               </div>
             )}
