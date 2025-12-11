@@ -28,15 +28,15 @@ public class SubscriptionController {
     
     @GetMapping("/current")
     public ResponseEntity<UserSubscriptionResponse> getCurrentSubscription(Authentication authentication) {
-        String email = authentication.getName();
-        return ResponseEntity.ok(subscriptionService.getCurrentSubscription(email));
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(subscriptionService.getCurrentSubscription(userId));
     }
     
     @PostMapping("/subscribe")
     public ResponseEntity<UserSubscriptionResponse> subscribeToPlan(
             @RequestBody SubscribePlanRequest request,
             Authentication authentication) {
-        String email = authentication.getName();
-        return ResponseEntity.ok(subscriptionService.subscribeToPlan(email, request.getPlanId()));
+        Long userId = Long.parseLong(authentication.getName());
+        return ResponseEntity.ok(subscriptionService.subscribeToPlan(userId, request.getPlanId()));
     }
 }

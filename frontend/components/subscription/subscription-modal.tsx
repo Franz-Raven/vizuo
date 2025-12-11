@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Check, Sparkles, Crown, Zap, Infinity } from 'lucide-react';
 import { Plan, UserSubscription } from '@/types/subscription';
-import { subscriptionApi } from '@/lib/api/subscription';
+import { getAllPlans, subscribeToPlan, getCurrentSubscription } from '@/lib/api/subscription';
 import { toast } from 'sonner';
 
 interface SubscriptionModalProps {
@@ -30,15 +30,15 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
       setLoading(true);
       
       // Always load plans
-      const plansData = await subscriptionApi.getAllPlans();
+      const plansData = await getAllPlans();
       setPlans(plansData);
       
       // Try to load current subscription, but don't fail if user not authenticated
       try {
-        const subscriptionData = await subscriptionApi.getCurrentSubscription();
+        const subscriptionData = await getCurrentSubscription();
         setCurrentSubscription(subscriptionData);
       } catch (err) {
-        // User might not be logged in, that's okay
+        console.error("Failed to load current subscription", err);
         console.log('Could not load current subscription (user may not be logged in)');
       }
     } catch (error) {
@@ -64,7 +64,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
     try {
       setSubscribing(selectedPlanId);
-      const updatedSubscription = await subscriptionApi.subscribeToPlan(selectedPlanId);
+      const updatedSubscription = await subscribeToPlan(selectedPlanId);
       setCurrentSubscription(updatedSubscription);
       toast.success('Successfully subscribed to the plan!');
       setShowConfirmDialog(false);
