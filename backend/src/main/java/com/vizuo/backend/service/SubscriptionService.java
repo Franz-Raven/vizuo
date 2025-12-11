@@ -34,8 +34,8 @@ public class SubscriptionService {
                 .collect(Collectors.toList());
     }
     
-    public UserSubscriptionResponse getCurrentSubscription(String email) {
-        User user = userRepository.findByEmail(email)
+    public UserSubscriptionResponse getCurrentSubscription(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         // Check for active subscription first
@@ -78,8 +78,8 @@ public class SubscriptionService {
     }
     
     @Transactional
-    public UserSubscriptionResponse subscribeToPlan(String email, Long planId) {
-        User user = userRepository.findByEmail(email)
+    public UserSubscriptionResponse subscribeToPlan(Long userId, Long planId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         Plan plan = planRepository.findById(planId)
