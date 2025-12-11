@@ -1,3 +1,5 @@
+import { UserRole } from "./admin";
+
 export interface UserProfile {
   id: number;
   username: string;
@@ -5,6 +7,7 @@ export interface UserProfile {
   avatar: string;
   coverImage: string;
   bio: string;
+  role: UserRole;
 }
 
 export interface GetProfileResponse {
