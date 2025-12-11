@@ -136,7 +136,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         return '[filter:drop-shadow(0_0_8px_rgb(156_163_175))]';
     }
   };
-
+  /*
   const getButtonColor = (planName: string) => {
     switch (planName.toLowerCase()) {
       case 'basic':
@@ -151,7 +151,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         return 'bg-gray-500 hover:bg-gray-600';
     }
   };
-
+  */
   if (!isOpen) return null;
 
   return (

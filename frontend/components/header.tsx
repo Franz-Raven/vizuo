@@ -3,48 +3,23 @@
 import React, { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Menu, X, HelpCircle, Moon, Sun, Bell, User, LayoutDashboard, LogOut, Shield } from "lucide-react"
-import { getProfile } from "@/lib/api/profile"
 import { logoutUser } from "@/lib/api/auth"
 import { navItems } from "@/types/navigation"
 import IconCell from "@/components/ui/icon-cell"
 import PrimaryButton from "./ui/primary-button"
 import SubscriptionModal from "@/components/subscription/subscription-modal"
-
-type HeaderUser = {
-  username: string
-  email: string
-  avatar: string
-}
+import { useAuth } from "@/context/auth-context"
 
 export default function Header() {
   const router = useRouter()
   const pathname = usePathname()
 
-  const [user, setUser] = useState<HeaderUser | null>(null)
-  const [open, setOpen] = useState(false) // profile dropdown
-  const [navOpen, setNavOpen] = useState(false) // mobile drawer
+  const { user } = useAuth()
+
+  const [open, setOpen] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
-
-  useEffect(() => {
-    let active = true
-      ; (async () => {
-        try {
-          const res = await getProfile()
-          if (!active || !res?.user) return
-          setUser({
-            username: res.user.username,
-            email: res.user.email,
-            avatar: res.user.avatar,
-          })
-        } catch (err) {
-          console.error("Failed to load header user", err)
-        }
-      })()
-    return () => {
-      active = false
-    }
-  }, [])
 
   useEffect(() => {
     if (typeof document === "undefined") return
@@ -77,7 +52,6 @@ export default function Header() {
       console.error("Failed to logout", err)
     } finally {
       setOpen(false)
-      setUser(null)
       router.replace("/landing")
     }
   }
@@ -196,18 +170,20 @@ export default function Header() {
                       <span>Dashboard</span>
                     </button>
                   </div>
-
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleAdmin}
-                      className="flex w-full items-center gap-2 my-2 px-4 py-2 rounded-md text-sm hover:bg-muted"
-                      role="menuitem"
-                    >
-                      <Shield className="h-4 w-4 text-muted-foreground" />
-                      <span>Admin</span>
-                    </button>
-                  </div>
+                  
+                  {user && user.role === "admin" && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={handleAdmin}
+                        className="flex w-full items-center gap-2 my-2 px-4 py-2 rounded-md text-sm hover:bg-muted"
+                        role="menuitem"
+                      >
+                        <Shield className="h-4 w-4 text-muted-foreground" />
+                        <span>Admin</span>
+                      </button>
+                    </div>
+                  )}
 
                   <div className="border-t border-border">
                     <button

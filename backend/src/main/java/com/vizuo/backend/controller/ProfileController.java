@@ -100,7 +100,22 @@ public class ProfileController {
             "coverImage", user.getCoverImage() != null 
                 ? user.getCoverImage() 
                 : "https://i.pinimg.com/1200x/45/c0/86/45c08695ac7400476965367aababdd3b.jpg",
-            "bio", user.getBio() != null ? user.getBio() : ""
+            "bio", user.getBio() != null ? user.getBio() : "",
+            "role", mapUserRole(user)
         );
+    }
+
+    private String mapUserRole(User user) {
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+
+        if (isAdmin) return "admin";
+
+        boolean isDesigner = user.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("DESIGNER"));
+
+        if (isDesigner) return "designer";
+
+        return "designer";
     }
 }

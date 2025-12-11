@@ -28,7 +28,6 @@ const CATEGORIES = [
 ];
 
 export default function HomePage() {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [assets, setAssets] = useState<Asset[]>([]);
