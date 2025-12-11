@@ -2,6 +2,7 @@ package com.vizuo.backend.service;
 
 import com.vizuo.backend.dto.AttachmentInfo;
 import com.vizuo.backend.dto.ImageResponse;
+import com.vizuo.backend.dto.UploadResponse;
 import com.vizuo.backend.entity.Image;
 import com.vizuo.backend.entity.ImageAttachment;
 import com.vizuo.backend.entity.Keyword;
@@ -35,13 +36,14 @@ public class ImageService {
     @Autowired
     private LikeService likeService;
 
-    public ImageResponse uploadImage(
+    public UploadResponse uploadImage(
             String email,
             String fileName,
             String description,
             List<String> keywords,
             List<MultipartFile> previewFiles,
-            List<MultipartFile> attachmentFiles) {
+            List<MultipartFile> attachmentFiles,
+            Boolean isPremium) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -49,7 +51,7 @@ public class ImageService {
 
         Set<Keyword> keywordEntities = keywordService.resolveKeywords(keywords);
         image.setKeywords(keywordEntities);
-
+        image.setPremium(isPremium != null && isPremium);
         String thumbnailUrl = null;
         if (previewFiles != null && !previewFiles.isEmpty()) {
             try {
@@ -76,7 +78,20 @@ public class ImageService {
 
         Image savedImage = imageRepository.save(image);
 
-        return toResponse(savedImage);
+        return new UploadResponse(
+            savedImage.getId(),
+            savedImage.getFileName(),
+            savedImage.getDescription(),
+            keywordService.toNameList(savedImage.getKeywords()),
+            savedImage.getThumbnailUrl(),
+            buildAttachmentInfoList(savedImage),
+            savedImage.getPremium(),
+            savedImage.getCreatedAt(),
+            savedImage.getUser().getUsername(),
+            savedImage.getUser().getAvatar(),
+            true,
+            "Upload successful"
+        );
     }
 
     public List<ImageResponse> getUserImages(String email) {

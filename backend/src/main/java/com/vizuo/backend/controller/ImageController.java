@@ -1,6 +1,7 @@
 package com.vizuo.backend.controller;
 
 import com.vizuo.backend.dto.ImageResponse;
+import com.vizuo.backend.dto.UploadResponse;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.service.UserService;
 import com.vizuo.backend.service.ImageService;
@@ -30,7 +31,8 @@ public class ImageController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "keywords", required = false) String keywords,
             @RequestParam(value = "previewFiles", required = false) MultipartFile[] previewFiles,
-            @RequestParam(value = "attachmentFiles", required = false) MultipartFile[] attachmentFiles) {
+            @RequestParam(value = "attachmentFiles", required = false) MultipartFile[] attachmentFiles,
+            @RequestParam(value = "isPremium", required = false) Boolean isPremium) {
 
         try {
             Long userId = Long.parseLong(authentication.getName());
@@ -45,13 +47,14 @@ public class ImageController {
             List<MultipartFile> attachmentFileList = attachmentFiles != null ? Arrays.asList(attachmentFiles)
                     : List.of();
 
-            ImageResponse response = imageService.uploadImage(
+            UploadResponse response = imageService.uploadImage(
                     email,
                     fileName,
                     description,
                     keywordList,
                     previewFileList,
-                    attachmentFileList);
+                    attachmentFileList,
+                    isPremium);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

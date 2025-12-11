@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import BackgroundBlobs from "@/components/background-blobs"
 import { uploadAsset } from "@/lib/api/upload"
+import { getCurrentSubscription } from "@/lib/api/subscription"
+import type { UserSubscription } from "@/types/subscription"
 
 export default function UploadPage() {
   const router = useRouter()
@@ -18,17 +20,41 @@ export default function UploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [notification, setNotification] = useState<{ message: string; type: "error" | "info" } | null>(null)
+  const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null)
 
   const [fileName, setFileName] = useState("")
   const [description, setDescription] = useState("")
   const [keywords, setKeywords] = useState<string[]>([])
   const [keywordInput, setKeywordInput] = useState("")
 
+  const [isPremiumUpload, setIsPremiumUpload] = useState(false)
   const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail") || ""
     setUserEmail(email)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    ;(async () => {
+      try {
+        const subscription = await getCurrentSubscription()
+        if (active) {
+          setCurrentSubscription(subscription)
+        }
+      } catch (error) {
+        console.error("Failed to load current subscription:", error)
+        if (active) {
+          setCurrentSubscription(null)
+        }
+      }
+    })()
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const showNotification = (message: string, type: "error" | "info" = "info") => {
@@ -73,8 +99,15 @@ export default function UploadPage() {
   const handleKeywordKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && keywordInput.trim()) {
       e.preventDefault()
-      if (!keywords.includes(keywordInput.trim())) {
-        setKeywords(prev => [...prev, keywordInput.trim()])
+      const trimmed = keywordInput.trim()
+      if (keywords.length >= 15) {
+        setKeywordInput("")
+        return
+      }
+      const lower = trimmed.toLowerCase()
+      const exists = keywords.some(k => k.toLowerCase() === lower)
+      if (!exists) {
+        setKeywords(prev => [...prev, trimmed])
       }
       setKeywordInput("")
     }
@@ -125,6 +158,8 @@ export default function UploadPage() {
         formData.append("attachmentFiles", file)
       })
 
+      formData.append("isPremium", isPremiumUpload ? "1" : "0")
+
       await uploadAsset(formData, percent => setUploadProgress(percent))
 
       setUploadProgress(100)
@@ -151,6 +186,11 @@ export default function UploadPage() {
     if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
     router.push("/home")
   }
+
+  const canUploadPremium =
+    currentSubscription &&
+    currentSubscription.status === "active" &&
+    (currentSubscription.plan.name === "Premium" || currentSubscription.plan.name === "Pro")
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -402,6 +442,7 @@ export default function UploadPage() {
                     placeholder="Type keyword and press Enter"
                     className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary transition"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">Note: 15 keyword limit.</p>
 
                   {keywords.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -470,6 +511,36 @@ export default function UploadPage() {
                     {uploading ? "Uploading..." : "Upload"}
                   </button>
                 </div>
+                {canUploadPremium && (
+                  <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-background/40 backdrop-blur-xl px-4 py-3 shadow-lg">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-foreground">
+                        Mark as Premium Content
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Highlight this asset and classify it as premium
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsPremiumUpload(prev => !prev)}
+                      disabled={uploading}
+                      className={`
+                        relative inline-flex h-6 w-12 items-center rounded-full transition
+                        ${isPremiumUpload ? "bg-primary" : "bg-muted"}
+                        ${uploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                      `}
+                    >
+                      <span
+                        className={`
+                          inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition
+                          ${isPremiumUpload ? "translate-x-6" : "translate-x-1"}
+                        `}
+                      />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
