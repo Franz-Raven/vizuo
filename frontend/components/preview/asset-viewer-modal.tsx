@@ -190,6 +190,7 @@ export default function AssetViewerModal({
                 isPremium={isPremium} 
                 currentSubscription={currentSubscription} 
                 onSubscriptionChange={refreshSubscription}
+                title={title}
               />
             </div>
           </div>
