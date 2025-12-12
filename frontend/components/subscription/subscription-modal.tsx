@@ -281,9 +281,15 @@ export default function SubscriptionModal({ isOpen, onClose, onSubscriptionChang
 
                       {/* Subscribe Button */}
                       {isBasicPlan ? (
-                        <div className="w-full py-3 px-4 rounded-lg font-semibold bg-white/20 text-white/50 cursor-not-allowed backdrop-blur-sm text-center">
-                          Current Plan
-                        </div>
+                        isCurrentPlan ? (
+                          <div className="w-full py-3 px-4 rounded-lg font-semibold bg-white/20 text-white/50 cursor-not-allowed backdrop-blur-sm text-center">
+                            Current Plan
+                          </div>
+                        ) : (
+                          <div className="w-full py-3 px-4 rounded-lg font-semibold bg-white/10 text-white/80 backdrop-blur-sm text-center">
+                            Free Plan
+                          </div>
+                        )
                       ) : (
                         <button
                           onClick={() => handleSubscribeClick(plan.id)}
