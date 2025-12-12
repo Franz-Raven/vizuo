@@ -63,7 +63,6 @@ export default function AssetViewerModal({
       active = false
     }
   }, [])
-  console.log('isPremium:', isPremium, 'currentSubscription:', currentSubscription);
   const handleShare = () => {
     const url = window.location.href;
     if (navigator.share) {

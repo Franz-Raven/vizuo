@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { UserSubscription } from "@/types/subscription";
 import { Crown } from "lucide-react";
 import SubscriptionModal from "@/components/subscription/subscription-modal";
+import { usePremiumDownload } from "@/lib/api/download"
 
 type DownloadMenuProps = {
   attachments: { url: string; format: string | null }[];
@@ -44,6 +45,19 @@ export default function DownloadMenu({
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Download failed");
+
+      console.log("isPremium:", isPremium, "canDownloadPremium:", canDownloadPremium);
+      if (isPremium && canDownloadPremium) {
+        try {
+          await usePremiumDownload()
+          if (onSubscriptionChange) {
+            onSubscriptionChange()
+          }
+        } catch (err) {
+          console.error("Failed to register premium download:", err)
+        }
+      }
+
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
 
