@@ -10,6 +10,7 @@ export type ImageResponse = {
   keywords: string[]
   thumbnailUrl: string | null
   attachments: Attachment[]
+  premium: boolean
   createdAt: string
   likesCount: number
   uploaderUsername?: string | null

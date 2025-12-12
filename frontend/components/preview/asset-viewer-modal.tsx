@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Palette, MoreVertical, Flag, Share2 } from "lucide-react";
 import DownloadMenu from "./download-menu";
 import CommentSection from "@/components/comment/comment-section";
+import { getCurrentSubscription } from "@/lib/api/subscription"
+import type { UserSubscription } from "@/types/subscription"
 
 type Attachment = {
   url: string;
@@ -17,6 +19,7 @@ type AssetViewerModalProps = {
   creator: string;
   imageUrl: string;
   attachments: Attachment[];
+  isPremium: boolean;
   imageId: number;
   avatarUrl?: string | null;
   onSaveToMoodboards?: () => void;
@@ -29,14 +32,38 @@ export default function AssetViewerModal({
   creator,
   imageUrl,
   attachments,
+  isPremium,
   imageId,
   avatarUrl,
   onSaveToMoodboards
 }: AssetViewerModalProps) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null)
 
   if (!open) return null;
 
+  useEffect(() => {
+    let active = true
+
+    ;(async () => {
+      try {
+        const subscription = await getCurrentSubscription()
+        if (active) {
+          setCurrentSubscription(subscription)
+        }
+      } catch (error) {
+        console.error("Failed to load current subscription:", error)
+        if (active) {
+          setCurrentSubscription(null)
+        }
+      }
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [])
+  console.log('isPremium:', isPremium, 'currentSubscription:', currentSubscription);
   const handleShare = () => {
     const url = window.location.href;
     if (navigator.share) {
@@ -56,6 +83,14 @@ export default function AssetViewerModal({
     setMoreOpen(false);
   };
 
+  const refreshSubscription = async () => {
+    try {
+      const newSub = await getCurrentSubscription();
+      setCurrentSubscription(newSub);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <button
@@ -151,7 +186,12 @@ export default function AssetViewerModal({
                 )}
               </div>
 
-              <DownloadMenu attachments={attachments} />
+              <DownloadMenu 
+                attachments={attachments} 
+                isPremium={isPremium} 
+                currentSubscription={currentSubscription} 
+                onSubscriptionChange={refreshSubscription}
+              />
             </div>
           </div>
 

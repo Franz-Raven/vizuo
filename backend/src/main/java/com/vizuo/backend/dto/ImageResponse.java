@@ -10,6 +10,7 @@ public class ImageResponse {
     private List<String> keywords;
     private String thumbnailUrl;
     private List<AttachmentInfo> attachments;
+    private boolean isPremium;
     private LocalDateTime createdAt;
     private long likesCount;
     private String uploaderUsername;
@@ -25,6 +26,7 @@ public class ImageResponse {
             List<String> keywords,
             String thumbnailUrl,
             List<AttachmentInfo> attachments,
+            boolean isPremium,
             LocalDateTime createdAt,
             long likesCount,
             String uploaderUsername,
@@ -36,6 +38,7 @@ public class ImageResponse {
         this.keywords = keywords;
         this.thumbnailUrl = thumbnailUrl;
         this.attachments = attachments;
+        this.isPremium = isPremium;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
@@ -50,6 +53,7 @@ public class ImageResponse {
             List<String> keywords,
             String thumbnailUrl,
             List<AttachmentInfo> attachments,
+            boolean isPremium,
             LocalDateTime createdAt,
             long likesCount,
             String uploaderUsername,
@@ -62,6 +66,7 @@ public class ImageResponse {
         this.keywords = keywords;
         this.thumbnailUrl = thumbnailUrl;
         this.attachments = attachments;
+        this.isPremium = isPremium;
         this.createdAt = createdAt;
         this.likesCount = likesCount;
         this.uploaderUsername = uploaderUsername;
@@ -86,6 +91,9 @@ public class ImageResponse {
 
     public List<AttachmentInfo> getAttachments() { return attachments; }
     public void setAttachments(List<AttachmentInfo> attachments) { this.attachments = attachments; }
+
+    public boolean isPremium() { return isPremium; }
+    public void setPremium(boolean premium) { isPremium = premium; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

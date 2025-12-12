@@ -9,9 +9,10 @@ import { toast } from 'sonner';
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubscriptionChange?: () => void;
 }
 
-export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+export default function SubscriptionModal({ isOpen, onClose, onSubscriptionChange }: SubscriptionModalProps) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,9 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
       const updatedSubscription = await subscribeToPlan(selectedPlanId);
       setCurrentSubscription(updatedSubscription);
       toast.success('Successfully subscribed to the plan!');
+      if (onSubscriptionChange) {
+        onSubscriptionChange();
+      }
       setShowConfirmDialog(false);
       setSelectedPlanId(null);
     } catch (error) {
