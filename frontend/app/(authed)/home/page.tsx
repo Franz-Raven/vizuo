@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, lazy, Suspense } from "react";
-import { useRouter } from "next/navigation";
 import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
 import { getHomeAssets } from "@/lib/api/home";
@@ -275,6 +274,7 @@ export default function HomePage() {
           creator={selectedAsset.uploaderUsername || "Unknown"}
           imageUrl={selectedAsset.thumbnailUrl || ""}
           attachments={selectedAsset.attachments || []}
+          isPremium={selectedAsset.premium ?? false}
           imageId={selectedAsset.id || 0}
           avatarUrl={selectedAsset.uploaderAvatar ?? null}
           onSaveToMoodboards={() => handleSaveToMoodboards(selectedAsset.id)}
