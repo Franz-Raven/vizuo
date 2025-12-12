@@ -65,7 +65,8 @@ public class AuthService {
         userSubscriptionRepository.save(subscription);
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, user);
+        String role = mapUserRole(user);
+        return new AuthResponse(token, user, role);
     }
 
     public AuthResponse authenticate(LoginRequest request) {
@@ -84,6 +85,19 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, user);
+        String role = mapUserRole(user);
+        return new AuthResponse(token, user, role);
     }
+
+    private String mapUserRole(User user) {
+    boolean isAdmin = user.getRoles().stream()
+            .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+    if (isAdmin) return "admin";
+
+    boolean isDesigner = user.getRoles().stream()
+            .anyMatch(r -> r.getName().equalsIgnoreCase("DESIGNER"));
+    if (isDesigner) return "designer";
+
+    return "designer";
+}
 }

@@ -36,9 +36,18 @@ public class AuthController {
                     .maxAge(Duration.ofDays(7))
                     .build();
 
+            ResponseCookie roleCookie = ResponseCookie.from("userRole", response.getRole())
+                    .httpOnly(false) // must be readable by Next middleware
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/")
+                    .maxAge(Duration.ofDays(7))
+                    .build();
+                    
             return ResponseEntity
                     .ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, roleCookie.toString())
                     .body(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -47,7 +56,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
+        try {   
             AuthResponse response = authService.authenticate(request);
 
             ResponseCookie cookie = ResponseCookie.from("authToken", response.getToken())
@@ -56,11 +65,20 @@ public class AuthController {
                     .sameSite("Lax")
                     .path("/")
                     .maxAge(Duration.ofDays(7))
+                    .build();   
+
+            ResponseCookie roleCookie = ResponseCookie.from("userRole", response.getRole())
+                    .httpOnly(false) // must be readable by Next middleware
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/")
+                    .maxAge(Duration.ofDays(7))
                     .build();
 
             return ResponseEntity
                     .ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, roleCookie.toString())
                     .body(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
@@ -77,9 +95,18 @@ public class AuthController {
                 .maxAge(0)
                 .build();
 
+        ResponseCookie roleCookie = ResponseCookie.from("userRole", "")
+                .httpOnly(false)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+
         return ResponseEntity
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, roleCookie.toString())
                 .body(Map.of("message", "Logged out"));
     }
 }
