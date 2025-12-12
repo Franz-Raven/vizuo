@@ -9,7 +9,6 @@ import { AdminUser, UserRole, UserStatus } from "@/types/admin";
 import AdminStats from "@/components/admin/admin-stats";
 import UserFilters from "@/components/admin/user-filters";
 import UserTable from "@/components/admin/user-table";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context"
 
 type JoinDateFilter = "all" | "day" | "week" | "month" | "year";
@@ -20,20 +19,9 @@ export default function AdminPage() {
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [statusFilter, setStatusFilter] = useState<UserStatus | "all">("all");
   const [joinDateFilter, setJoinDateFilter] = useState<JoinDateFilter>("all");
-  const { user, loading } = useAuth();
-  const router = useRouter()
+  const { user } = useAuth();
   
   useEffect(() => {
-    if (loading) return;
-
-    if (!user || user.role !== "admin") {
-      router.replace("/home");
-    }
-  }, [loading, user, router]);
-
-  useEffect(() => {
-    if (loading || !user || user.role !== "admin") return;
-
     const fetchData = async () => {
       try {
         const fetchedUsers = await getAdminUsers();
@@ -45,7 +33,7 @@ export default function AdminPage() {
     };
 
     fetchData();
-  }, [loading, user]);
+  }, [user]);
 
   const filteredUsers = useMemo(() => {
     const now = new Date();
