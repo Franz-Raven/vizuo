@@ -12,6 +12,7 @@ type DownloadMenuProps = {
   isPremium?: boolean;
   currentSubscription?: UserSubscription | null;
   onSubscriptionChange?: () => void;
+  title: string;
 };
 
 export default function DownloadMenu({
@@ -19,7 +20,8 @@ export default function DownloadMenu({
   onDownloadZip,
   isPremium,
   currentSubscription,
-  onSubscriptionChange
+  onSubscriptionChange,
+  title
 }: DownloadMenuProps) {
   const [open, setOpen] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -61,12 +63,12 @@ export default function DownloadMenu({
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
 
-      const ext = format ? format.toLowerCase() : "";
-      const fallbackName = `vizuo-asset${ext ? `.${ext}` : ""}`;
+      // const ext = format ? format.toLowerCase() : "";
+      //const fallbackName = `vizuo-asset${ext ? `.${ext}` : ""}`;
 
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = fallbackName;
+      a.download = title;
       document.body.appendChild(a);
       a.click();
       a.remove();
