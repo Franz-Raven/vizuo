@@ -79,7 +79,10 @@ public class AuthService {
             user = userRepository.findByUsername(request.getIdentifier())
                     .orElseThrow(() -> new RuntimeException("Invalid credentials"));
         }
-
+        
+        if (user.getStatus() != null && user.getStatus().equals("BANNED")) {
+            throw new RuntimeException("User is banned");
+        }
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
