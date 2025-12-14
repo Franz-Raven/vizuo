@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { usePathname } from "next/navigation";
 import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
 import { getHomeAssets } from "@/lib/api/home";
@@ -16,65 +17,154 @@ import OrganizeModal from "@/components/moodboard/organize-modal";
 
 const LazyAssetGrid = lazy(() => import("@/components/home/assetgrid"));
 
-const CATEGORIES = [
-  "All",
-  "Graphics",
-  "Photos",
-  "Vectors",
-  "3D",
-  "Templates",
-  "Icons"
-];
-
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [fullAssets, setFullAssets] = useState<ImageResponse[]>([]);
+
   const [savedImageIds, setSavedImageIds] = useState<number[]>([]);
   const [savedImages, setSavedImages] = useState<SavedImage[]>([]);
   const [moodboards, setMoodboards] = useState<Moodboard[]>([]);
+
   const [loadingMain, setLoadingMain] = useState(true);
-  const [fullAssets, setFullAssets] = useState<ImageResponse[]>([]);
+
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<ImageResponse | null>(null);
+
   const [isOrganizeOpen, setIsOrganizeOpen] = useState(false);
   const [organizeSavedIds, setOrganizeSavedIds] = useState<number[]>([]);
 
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const seenIdsRef = useRef<Set<number>>(new Set());
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchingRef = useRef(false);
+
+  const pathname = usePathname();
+
+  const mapToAsset = (item: ImageResponse): Asset => ({
+    id: item.id,
+    type: "Photos",
+    title: item.fileName || "Untitled",
+    creator: item.uploaderUsername || "Unknown",
+    likes: item.likesCount ?? 0,
+    image: item.thumbnailUrl || "",
+    isLiked: item.likedByCurrentUser ?? false
+  });
+
   useEffect(() => {
-    async function fetchData() {
+    let cancelled = false;
+
+    async function fetchInitial() {
+      setLoadingMain(true);
+
       try {
-        const [assetsData, savedData, boardData] = await Promise.all([
-          getHomeAssets(),
+        const [feed, savedData, boardData] = await Promise.all([
+          getHomeAssets(15, null),
           getSavedImages(),
           getMoodboards()
         ]);
 
-        const mapped: Asset[] = assetsData.map((item: ImageResponse) => ({
-          id: item.id,
-          type: "Photos",
-          title: item.fileName || "Untitled",
-          creator: item.uploaderUsername || "Unknown",
-          likes: item.likesCount ?? 0,
-          image: item.thumbnailUrl || "",
-          isLiked: item.likedByCurrentUser ?? false
-        }));
+        if (cancelled) return;
 
         const saved = savedData as SavedImage[];
         const savedIds = saved.map((s) => s.imageId);
 
-        setFullAssets(assetsData);
-        setAssets(mapped);
+        const newFull: ImageResponse[] = [];
+        const newAssets: Asset[] = [];
+
+        const nextSeen = new Set<number>();
+
+        for (const item of feed.items) {
+          nextSeen.add(item.id);
+          newFull.push(item);
+          newAssets.push(mapToAsset(item));
+        }
+
+        seenIdsRef.current = nextSeen;
+
+        setFullAssets(newFull);
+        setAssets(newAssets);
+
         setSavedImages(saved);
         setSavedImageIds(savedIds);
         setMoodboards(boardData);
+
+        setCursor(feed.nextCursor);
+        setHasMore(!!feed.nextCursor);
       } catch (e) {
         console.error(e);
+        setFullAssets([]);
+        setAssets([]);
+        setCursor(null);
+        setHasMore(false);
       } finally {
-        setLoadingMain(false);
+        if (!cancelled) setLoadingMain(false);
       }
     }
-    fetchData();
-  }, []);
+
+    if (pathname === "/home" && assets.length === 0) {
+      fetchInitial();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  const fetchMore = async () => {
+    if (!hasMore) return;
+    if (fetchingRef.current) return;
+    if (!cursor) return;
+
+    fetchingRef.current = true;
+    setLoadingMore(true);
+
+    try {
+      const feed = await getHomeAssets(15, cursor);
+
+      const addFull: ImageResponse[] = [];
+      const addAssets: Asset[] = [];
+
+      for (const item of feed.items) {
+        if (!seenIdsRef.current.has(item.id)) {
+          seenIdsRef.current.add(item.id);
+          addFull.push(item);
+          addAssets.push(mapToAsset(item));
+        }
+      }
+
+      setFullAssets((prev) => [...prev, ...addFull]);
+      setAssets((prev) => [...prev, ...addAssets]);
+
+      setCursor(feed.nextCursor);
+      setHasMore(!!feed.nextCursor);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingMore(false);
+      fetchingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting) fetchMore();
+      },
+      { root: null, rootMargin: "800px 0px", threshold: 0 }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [cursor, hasMore]);
 
   const handleSelectAsset = (id: number) => {
     const found = fullAssets.find((a) => a.id === id);
@@ -97,6 +187,18 @@ export default function HomePage() {
       )
     );
 
+    setFullAssets((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              likedByCurrentUser: !currentlyLiked,
+              likesCount: (item.likesCount ?? 0) + (currentlyLiked ? -1 : 1)
+            }
+          : item
+      )
+    );
+
     try {
       if (currentlyLiked) {
         await unlikeAsset(id);
@@ -114,6 +216,18 @@ export default function HomePage() {
                 likes: asset.likes + (currentlyLiked ? 1 : -1)
               }
             : asset
+        )
+      );
+
+      setFullAssets((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                likedByCurrentUser: currentlyLiked,
+                likesCount: (item.likesCount ?? 0) + (currentlyLiked ? 1 : -1)
+              }
+            : item
         )
       );
     }
@@ -150,9 +264,7 @@ export default function HomePage() {
         finalSaved = created as SavedImage;
 
         setSavedImages((prev) => [...prev, finalSaved]);
-        setSavedImageIds((prev) =>
-          prev.includes(imageId) ? prev : [...prev, imageId]
-        );
+        setSavedImageIds((prev) => (prev.includes(imageId) ? prev : [...prev, imageId]));
       } else {
         finalSaved = existing;
       }
@@ -169,16 +281,11 @@ export default function HomePage() {
     }
   };
 
-  const handleAssignToBoard = async (
-    moodboardId: number,
-    savedIds: number[]
-  ) => {
+  const handleAssignToBoard = async (moodboardId: number, savedIds: number[]) => {
     if (!savedIds.length) return;
     try {
       const updated = await assignSavedImagesToMoodboard(moodboardId, savedIds);
-      setMoodboards((prev) =>
-        prev.map((b) => (b.id === updated.id ? updated : b))
-      );
+      setMoodboards((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
       setIsOrganizeOpen(false);
     } catch (err) {
       console.error(err);
@@ -229,27 +336,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="mb-8 flex justify-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {CATEGORIES.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  className={`px-5 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${
-                    activeCategory === category
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                      : "bg-card border border-border hover:border-primary/50 text-foreground"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
             <Suspense>
               <LazyAssetGrid
                 assets={assets}
                 searchQuery={searchQuery}
-                activeCategory={activeCategory}
                 onToggleLike={handleToggleLike}
                 savedImageIds={savedImageIds}
                 onToggleSave={handleToggleSave}
@@ -257,11 +347,20 @@ export default function HomePage() {
               />
             </Suspense>
 
-            <div className="text-center py-16">
-              <button className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition shadow-lg shadow-primary/20 font-semibold border border-primary/20">
-                Load More Assets
-              </button>
-            </div>
+            <div ref={sentinelRef} className="h-1 w-full" />
+
+            {loadingMore && (
+              <div className="py-10 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+                <div className="h-5 w-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                Loading more assets
+              </div>
+            )}
+
+            {!hasMore && (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                You’ve reached the end.
+              </div>
+            )}
           </div>
         </main>
       )}
