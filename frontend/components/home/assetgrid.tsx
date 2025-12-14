@@ -5,19 +5,11 @@ import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 
 export default function AssetGridComponent({
   assets,
-  searchQuery,
   onToggleLike,
   savedImageIds,
   onToggleSave,
   onSelect
 }: AssetGridProps) {
-  const filteredAssets = assets.filter((asset) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      asset.title.toLowerCase().includes(q) ||
-      asset.creator.toLowerCase().includes(q)
-    );
-  });
 
   return (
     <ResponsiveMasonry
@@ -29,7 +21,7 @@ export default function AssetGridComponent({
       }}
     >
       <Masonry gutter="24px">
-        {filteredAssets.map((asset) => {
+        {assets.map((asset) => {
           const isSaved = savedImageIds.includes(asset.id);
 
           return (

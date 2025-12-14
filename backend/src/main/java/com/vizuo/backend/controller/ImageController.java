@@ -5,6 +5,7 @@ import com.vizuo.backend.dto.ImageResponse;
 import com.vizuo.backend.dto.UploadResponse;
 import com.vizuo.backend.entity.User;
 import com.vizuo.backend.service.ImageService;
+import com.vizuo.backend.service.SearchService;
 import com.vizuo.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,9 @@ public class ImageController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private SearchService searchService;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(Authentication authentication,
@@ -115,6 +119,23 @@ public class ImageController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to get feed images: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> search(Authentication authentication,
+                                   @RequestParam(value = "q") String q,
+                                   @RequestParam(value = "limit", required = false, defaultValue = "15") int limit,
+                                   @RequestParam(value = "cursor", required = false) String cursor) {
+        try {
+            Long currentUserId = null;
+            if (authentication != null) {
+                currentUserId = Long.parseLong(authentication.getName());
+            }
+            FeedResponse<ImageResponse> result = searchService.searchFeed(currentUserId, q, limit, cursor);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Search failed: " + e.getMessage());
         }
     }
 

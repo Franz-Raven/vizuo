@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { usePathname } from "next/navigation";
+import { SendHorizontal } from "lucide-react";
 import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
-import { getHomeAssets } from "@/lib/api/home";
+import { getHomeAssets, searchHomeAssets } from "@/lib/api/home";
 import { likeAsset, unlikeAsset } from "@/lib/api/like";
 import { getSavedImages, saveImage, unsaveImage } from "@/lib/api/save-image";
 import { getMoodboards, assignSavedImagesToMoodboard } from "@/lib/api/moodboard";
@@ -17,8 +18,18 @@ import OrganizeModal from "@/components/moodboard/organize-modal";
 
 const LazyAssetGrid = lazy(() => import("@/components/home/assetgrid"));
 
+function normalizeQuery(q: string) {
+  return q.trim().replace(/\s+/g, " ");
+}
+
 export default function HomePage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
+  const normalizedSearch = useMemo(
+    () => normalizeQuery(submittedSearch),
+    [submittedSearch]
+  );
+  const isSearchMode = normalizedSearch.length > 0;
 
   const [assets, setAssets] = useState<Asset[]>([]);
   const [fullAssets, setFullAssets] = useState<ImageResponse[]>([]);
@@ -55,65 +66,83 @@ export default function HomePage() {
     isLiked: item.likedByCurrentUser ?? false
   });
 
+  const resetFeedState = () => {
+    setAssets([]);
+    setFullAssets([]);
+    setCursor(null);
+    setHasMore(true);
+    setLoadingMore(false);
+    fetchingRef.current = false;
+    seenIdsRef.current = new Set();
+  };
+
+  const fetchInitial = async (modeQuery: string) => {
+    setLoadingMain(true);
+
+    try {
+      const [feed, savedData, boardData] = await Promise.all([
+        modeQuery
+          ? searchHomeAssets(modeQuery, 15, null)
+          : getHomeAssets(15, null),
+        getSavedImages(),
+        getMoodboards()
+      ]);
+
+      const saved = savedData as SavedImage[];
+      const savedIds = saved.map((s) => s.imageId);
+
+      const newFull: ImageResponse[] = [];
+      const newAssets: Asset[] = [];
+
+      const nextSeen = new Set<number>();
+
+      for (const item of feed.items) {
+        nextSeen.add(item.id);
+        newFull.push(item);
+        newAssets.push(mapToAsset(item));
+      }
+
+      seenIdsRef.current = nextSeen;
+
+      setFullAssets(newFull);
+      setAssets(newAssets);
+
+      setSavedImages(saved);
+      setSavedImageIds(savedIds);
+      setMoodboards(boardData);
+
+      setCursor(feed.nextCursor);
+      setHasMore(!!feed.nextCursor);
+    } catch (e) {
+      console.error(e);
+      setFullAssets([]);
+      setAssets([]);
+      setCursor(null);
+      setHasMore(false);
+    } finally {
+      setLoadingMain(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchInitial() {
-      setLoadingMain(true);
-
+    async function run() {
+      if (pathname !== "/home") return;
+      resetFeedState();
       try {
-        const [feed, savedData, boardData] = await Promise.all([
-          getHomeAssets(15, null),
-          getSavedImages(),
-          getMoodboards()
-        ]);
-
-        if (cancelled) return;
-
-        const saved = savedData as SavedImage[];
-        const savedIds = saved.map((s) => s.imageId);
-
-        const newFull: ImageResponse[] = [];
-        const newAssets: Asset[] = [];
-
-        const nextSeen = new Set<number>();
-
-        for (const item of feed.items) {
-          nextSeen.add(item.id);
-          newFull.push(item);
-          newAssets.push(mapToAsset(item));
-        }
-
-        seenIdsRef.current = nextSeen;
-
-        setFullAssets(newFull);
-        setAssets(newAssets);
-
-        setSavedImages(saved);
-        setSavedImageIds(savedIds);
-        setMoodboards(boardData);
-
-        setCursor(feed.nextCursor);
-        setHasMore(!!feed.nextCursor);
-      } catch (e) {
-        console.error(e);
-        setFullAssets([]);
-        setAssets([]);
-        setCursor(null);
-        setHasMore(false);
+        await fetchInitial(normalizedSearch);
       } finally {
-        if (!cancelled) setLoadingMain(false);
+        if (cancelled) return;
       }
     }
 
-    if (pathname === "/home" && assets.length === 0) {
-      fetchInitial();
-    }
+    run();
 
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [pathname, normalizedSearch]);
 
   const fetchMore = async () => {
     if (!hasMore) return;
@@ -124,7 +153,9 @@ export default function HomePage() {
     setLoadingMore(true);
 
     try {
-      const feed = await getHomeAssets(15, cursor);
+      const feed = isSearchMode
+        ? await searchHomeAssets(normalizedSearch, 15, cursor)
+        : await getHomeAssets(15, cursor);
 
       const addFull: ImageResponse[] = [];
       const addAssets: Asset[] = [];
@@ -164,7 +195,7 @@ export default function HomePage() {
 
     io.observe(el);
     return () => io.disconnect();
-  }, [cursor, hasMore]);
+  }, [cursor, hasMore, isSearchMode, normalizedSearch]);
 
   const handleSelectAsset = (id: number) => {
     const found = fullAssets.find((a) => a.id === id);
@@ -305,7 +336,9 @@ export default function HomePage() {
         <main className="min-h-screen relative z-10 pt-16 flex justify-center items-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-12 w-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading your assets</p>
+            <p className="text-sm text-muted-foreground">
+              {isSearchMode ? "Searching assets" : "Loading your assets"}
+            </p>
           </div>
         </main>
       ) : (
@@ -326,20 +359,33 @@ export default function HomePage() {
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
+
                 <input
                   type="text"
                   placeholder="Search assets"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-14 pr-6 py-4 bg-card border-2 border-primary/30 rounded-xl focus:outline-none focus:border-primary transition text-foreground placeholder:text-muted-foreground shadow-lg shadow-primary/5"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setSubmittedSearch(searchInput);
+                    }
+                  }}
+                  className="w-full px-14 py-3 bg-card border-2 border-primary/30 rounded-xl focus:outline-none focus:border-primary transition text-foreground placeholder:text-muted-foreground shadow-lg shadow-primary/5"
                 />
+
+                <button
+                  onClick={() => setSubmittedSearch(searchInput)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition"
+                >
+                  <SendHorizontal className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
             <Suspense>
               <LazyAssetGrid
                 assets={assets}
-                searchQuery={searchQuery}
+                searchQuery={""}
                 onToggleLike={handleToggleLike}
                 savedImageIds={savedImageIds}
                 onToggleSave={handleToggleSave}
