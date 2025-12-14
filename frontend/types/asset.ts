@@ -11,7 +11,6 @@ export interface Asset {
 export interface AssetGridProps {
   assets: Asset[];
   searchQuery: string;
-  activeCategory: string;
   onToggleLike: (id: number, currentlyLiked: boolean) => void;
   savedImageIds: number[];
   onToggleSave: (imageId: number) => void;

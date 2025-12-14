@@ -1,10 +1,11 @@
 package com.vizuo.backend.controller;
 
+import com.vizuo.backend.dto.FeedResponse;
 import com.vizuo.backend.dto.ImageResponse;
 import com.vizuo.backend.dto.UploadResponse;
 import com.vizuo.backend.entity.User;
-import com.vizuo.backend.service.UserService;
 import com.vizuo.backend.service.ImageService;
+import com.vizuo.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -65,7 +66,10 @@ public class ImageController {
     @GetMapping("/my-images")
     public ResponseEntity<?> getMyImages(Authentication authentication) {
         try {
-            String email = authentication.getName();
+            Long userId = Long.parseLong(authentication.getName());
+            User user = userService.getUserById(userId);
+            String email = user.getEmail();
+
             List<ImageResponse> images = imageService.getUserImages(email);
             return ResponseEntity.ok(images);
         } catch (Exception e) {
@@ -86,7 +90,10 @@ public class ImageController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteImage(@PathVariable Long id, Authentication authentication) {
         try {
-            String email = authentication.getName();
+            Long userId = Long.parseLong(authentication.getName());
+            User user = userService.getUserById(userId);
+            String email = user.getEmail();
+
             imageService.deleteImage(id, email);
             return ResponseEntity.ok("Image deleted successfully");
         } catch (Exception e) {
@@ -95,15 +102,17 @@ public class ImageController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<?> getFeedImages(Authentication authentication) {
+    public ResponseEntity<?> getFeedImages(Authentication authentication,
+            @RequestParam(value = "limit", required = false, defaultValue = "15") int limit,
+            @RequestParam(value = "cursor", required = false) String cursor) {
         try {
             Long currentUserId = null;
             if (authentication != null) {
                 currentUserId = Long.parseLong(authentication.getName());
             }
 
-            List<ImageResponse> images = imageService.getFeedImages(currentUserId);
-            return ResponseEntity.ok(images);
+            FeedResponse<ImageResponse> response = imageService.getPersonalizedFeed(currentUserId, limit, cursor);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to get feed images: " + e.getMessage());
         }
