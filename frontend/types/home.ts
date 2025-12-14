@@ -3,6 +3,11 @@ export type Attachment = {
   format: string | null
 }
 
+export type FeedResponse<T> = {
+  items: T[];
+  nextCursor: string | null;
+}
+
 export type ImageResponse = {
   id: number
   fileName: string | null

@@ -45,4 +45,23 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
             boolean excludedIdsEmpty,
             Pageable pageable
     );
+
+    @Query("""
+        select i
+        from Image i
+        where i.status = true
+          and (:excludedIdsEmpty = true or i.id not in :excludedIds)
+          and (
+            (i.fileName is not null and lower(i.fileName) like concat('%', :q, '%'))
+            or
+            (i.description is not null and lower(i.description) like concat('%', :q, '%'))
+          )
+        order by i.createdAt desc
+        """)
+    List<Image> findCandidatesByTextQuery(
+            String q,
+            Collection<Long> excludedIds,
+            boolean excludedIdsEmpty,
+            Pageable pageable
+    );
 }
