@@ -4,9 +4,10 @@ import { useState } from "react";
 import type { UserSubscription } from "@/types/subscription";
 import { Crown } from "lucide-react";
 import SubscriptionModal from "@/components/subscription/subscription-modal";
-import { usePremiumDownload } from "@/lib/api/download"
+import { usePremiumDownload, trackPremiumDownload } from "@/lib/api/download"
 
 type DownloadMenuProps = {
+  imageId: number;
   attachments: { url: string; format: string | null }[];
   onDownloadZip?: () => void;
   isPremium?: boolean;
@@ -16,6 +17,7 @@ type DownloadMenuProps = {
 };
 
 export default function DownloadMenu({
+  imageId,
   attachments,
   onDownloadZip,
   isPremium,
@@ -52,6 +54,7 @@ export default function DownloadMenu({
       if (isPremium && canDownloadPremium) {
         try {
           await usePremiumDownload()
+          await trackPremiumDownload(imageId)
           if (onSubscriptionChange) {
             onSubscriptionChange()
           }
