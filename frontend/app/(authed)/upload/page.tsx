@@ -7,6 +7,7 @@ import BackgroundBlobs from "@/components/background-blobs"
 import { uploadAsset } from "@/lib/api/upload"
 import { getCurrentSubscription } from "@/lib/api/subscription"
 import type { UserSubscription } from "@/types/subscription"
+import { useAuth } from "@/context/auth-context"
 
 export default function UploadPage() {
   const router = useRouter()
@@ -30,10 +31,19 @@ export default function UploadPage() {
   const [isPremiumUpload, setIsPremiumUpload] = useState(false)
   const [userEmail, setUserEmail] = useState("")
 
+  const { user } = useAuth()
+
   useEffect(() => {
-    const email = localStorage.getItem("userEmail") || ""
-    setUserEmail(email)
-  }, [])
+    if (user?.email) {
+      setUserEmail(user.email)
+      return
+    }
+
+    const storedEmail = localStorage.getItem("userEmail")
+    if (storedEmail) {
+      setUserEmail(storedEmail)
+    }
+  }, [user])
 
   useEffect(() => {
     let active = true

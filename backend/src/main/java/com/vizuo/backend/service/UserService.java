@@ -9,6 +9,7 @@ import com.vizuo.backend.repository.LikeRepository;
 import com.vizuo.backend.repository.ImageRepository;
 import com.vizuo.backend.dto.ProfileAssetDTO;
 import com.vizuo.backend.repository.SavedImageRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -152,6 +153,11 @@ public List<ProfileAssetDTO> getUserFavorites(Long userId) {
             .collect(Collectors.toList());
 }
 
+@Transactional(readOnly = true)
+public User getUserByIdWithRoles(Long id) {
+  return userRepository.findByIdWithRoles(id)
+      .orElseThrow(() -> new RuntimeException("User not found"));
+}
     // combined method 
     // public Map<String, Object> getAllProfileAssets(Long userId) {
     //     return Map.of(

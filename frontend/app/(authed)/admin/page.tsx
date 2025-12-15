@@ -10,6 +10,7 @@ import AdminStats from "@/components/admin/admin-stats";
 import UserFilters from "@/components/admin/user-filters";
 import UserTable from "@/components/admin/user-table";
 import { useAuth } from "@/context/auth-context"
+import { useRouter } from "next/navigation";
 
 type JoinDateFilter = "all" | "day" | "week" | "month" | "year";
 
@@ -20,20 +21,29 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<UserStatus | "all">("all");
   const [joinDateFilter, setJoinDateFilter] = useState<JoinDateFilter>("all");
   const { user } = useAuth();
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const fetchedUsers = await getAdminUsers();
-        setUsers(fetchedUsers);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load users");
-      }
-    };
+  const router = useRouter();
 
-    fetchData();
-  }, [user]);
+  useEffect(() => {
+    if (user === undefined) return
+
+    if (!user || user.role !== "admin") {
+      router.replace("/home")
+    }
+
+    if (user && user.role === "admin") {
+      const fetchData = async () => {
+        try {
+          const fetchedUsers = await getAdminUsers();
+          setUsers(fetchedUsers);
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to load users");
+        }
+      };
+
+      fetchData();
+    }
+  }, [user, router])
 
   const filteredUsers = useMemo(() => {
     const now = new Date();
@@ -103,6 +113,10 @@ export default function AdminPage() {
       toast.error("Failed to update status");
     }
   };
+
+  if (!user || user.role !== "admin") {
+    return null
+  }
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">

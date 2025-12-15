@@ -10,15 +10,6 @@ export async function registerUser(data: RegisterPayload) {
     body: JSON.stringify(data),
   });
 
-  if (typeof window !== "undefined" && result.user) {
-    if (result.user.email) {
-      localStorage.setItem("userEmail", result.user.email);
-    }
-    if (result.user.id) {
-      localStorage.setItem("userId", result.user.id.toString());
-    }
-  }
-
   return result;
 }
 
@@ -27,28 +18,12 @@ export async function loginUser(data: LoginPayload) {
     method: "POST",
     body: JSON.stringify(data),
   });
-
-  if (typeof window !== "undefined" && result.user) {
-    if (result.user.email) {
-      localStorage.setItem("userEmail", result.user.email);
-    }
-    if (result.user.id) {
-      localStorage.setItem("userId", result.user.id.toString());
-    }
-  }
-
+ 
   return result;
 }
 
 export async function logoutUser() {
-  try {
-    await apiRequest("/auth/logout", {
-      method: "POST",
-    });
-  } finally {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userId");
-    }
-  }
+  await apiRequest("/auth/logout", {
+    method: "POST",
+  });
 }

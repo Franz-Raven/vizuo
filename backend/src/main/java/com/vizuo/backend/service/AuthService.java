@@ -66,7 +66,7 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         String role = mapUserRole(user);
-        return new AuthResponse(token, user, role);
+        return new AuthResponse(token, toUserResponse(user, role), role);
     }
 
     public AuthResponse authenticate(LoginRequest request) {
@@ -89,7 +89,20 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         String role = mapUserRole(user);
-        return new AuthResponse(token, user, role);
+        return new AuthResponse(token, toUserResponse(user, role), role);
+    }
+
+    private com.vizuo.backend.dto.UserResponse toUserResponse(User user, String role) {
+        return new com.vizuo.backend.dto.UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAvatar(),
+                user.getBio(),
+                user.getCoverImage(),
+                user.getStatus(),
+                role
+        );
     }
 
     private String mapUserRole(User user) {

@@ -37,7 +37,7 @@ public class AuthController {
                     .build();
 
             ResponseCookie roleCookie = ResponseCookie.from("userRole", response.getRole())
-                    .httpOnly(false) // must be readable by Next middleware
+                    .httpOnly(true) // must be readable by Next middleware
                     .secure(false)
                     .sameSite("Lax")
                     .path("/")
