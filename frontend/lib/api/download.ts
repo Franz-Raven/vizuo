@@ -6,3 +6,10 @@ export async function usePremiumDownload(): Promise<UserSubscription> {
     method: 'POST',
   })
 }
+
+export async function trackPremiumDownload(imageId: number): Promise<UserSubscription> {
+  return apiRequest<UserSubscription>("/downloads/premium/track", {
+    method: "POST",
+    body: JSON.stringify({ imageId }),
+  })
+}

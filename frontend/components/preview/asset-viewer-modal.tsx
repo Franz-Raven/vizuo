@@ -186,6 +186,7 @@ export default function AssetViewerModal({
               </div>
 
               <DownloadMenu 
+                imageId={imageId}
                 attachments={attachments} 
                 isPremium={isPremium} 
                 currentSubscription={currentSubscription} 
