@@ -35,10 +35,6 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // Designer fields
-    @Column(name = "is_subscribed")
-    private Boolean isSubscribed = false;
-
     @Column(name = "commission_rate")
     private Double commissionRate = 0.0;
 
@@ -70,7 +66,6 @@ public class User {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.isSubscribed = false;
         this.commissionRate = 0.0;
     }
 
@@ -100,9 +95,6 @@ public class User {
 
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
-
-    public Boolean getSubscribed() { return isSubscribed; }
-    public void setSubscribed(Boolean subscribed) { isSubscribed = subscribed; }
 
     public Double getCommissionRate() { return commissionRate; }
     public void setCommissionRate(Double commissionRate) { this.commissionRate = commissionRate; }
