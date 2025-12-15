@@ -30,6 +30,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useAuth } from "@/context/auth-context"
 
 function SortableImageItem({ img, onRemove }: { img: SavedImage; onRemove: (id: number) => void }) {
   const {
@@ -102,6 +103,7 @@ export default function MoodboardViewPage() {
   const [organizeMode, setOrganizeMode] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { user } = useAuth();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -121,7 +123,7 @@ export default function MoodboardViewPage() {
       setMoodboard(data);
       
       // Check if current user is the owner
-      const currentUserId = Number(localStorage.getItem("userId"));
+      const currentUserId = user?.id;
       console.log("Current userId:", currentUserId, "Moodboard userId:", data.userId);
       setIsOwner(data.userId === currentUserId);
 
