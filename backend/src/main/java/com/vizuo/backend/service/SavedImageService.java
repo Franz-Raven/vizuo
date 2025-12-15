@@ -58,7 +58,7 @@ public class SavedImageService {
         userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return savedImageRepository.findAllById(ids)
                 .stream()
-                .filter(si -> si.getUser().getId().equals(userId))
+                //.filter(si -> si.getUser().getId().equals(userId))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
