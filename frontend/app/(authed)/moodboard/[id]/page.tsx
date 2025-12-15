@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Header from "@/components/header";
 import BackgroundBlobs from "@/components/background-blobs";
-import { getMoodboardById, updateMoodboard, deleteMoodboard, reorderMoodboardImages } from "@/lib/api/moodboard";
+import { getMoodboardById, updateMoodboard, deleteMoodboard, reorderMoodboardImages, removeSavedImageFromMoodboard } from "@/lib/api/moodboard";
 import { getSavedImagesByIds } from "@/lib/api/save-image";
 import { Moodboard } from "@/types/moodboard";
 import { SavedImage } from "@/types/save-image";
@@ -32,7 +32,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/context/auth-context"
 
-function SortableImageItem({ img, onRemove }: { img: SavedImage; onRemove: (id: number) => void }) {
+function SortableImageItem({ img, onRemove, organizeMode }: { img: SavedImage; onRemove: (id: number) => void; organizeMode: boolean }) {
   const {
     attributes,
     listeners,
@@ -52,12 +52,12 @@ function SortableImageItem({ img, onRemove }: { img: SavedImage; onRemove: (id: 
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="relative group cursor-grab active:cursor-grabbing"
+      className="relative group"
     >
       <div
-        className={`aspect-square rounded-xl overflow-hidden border-2 bg-card transition-all ${
+        {...attributes}
+        {...listeners}
+        className={`aspect-square rounded-xl overflow-hidden border-2 bg-card transition-all cursor-grab active:cursor-grabbing ${
           isDragging
             ? "border-primary shadow-2xl scale-105 rotate-2"
             : "border-border"
@@ -71,22 +71,24 @@ function SortableImageItem({ img, onRemove }: { img: SavedImage; onRemove: (id: 
       </div>
 
       {/* Drag Handle Indicator */}
-      {!isDragging && (
+      {!isDragging && organizeMode && (
         <div className="absolute top-2 left-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
           <GripVertical className="w-4 h-4 text-white" />
         </div>
       )}
 
-      {/* Delete Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(img.id);
-        }}
-        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+      {/* Delete Button - Always visible in organize mode */}
+      {organizeMode && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(img.id);
+          }}
+          className="absolute top-2 right-2 w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 hover:scale-110 transition-all active:scale-95"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 }
@@ -106,7 +108,11 @@ export default function MoodboardViewPage() {
   const { user } = useAuth();
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -165,15 +171,23 @@ export default function MoodboardViewPage() {
     }
   };
 
-  const handleRemoveImage = async (imageId: number) => {
+  const handleRemoveImage = async (savedImageId: number) => {
     if (!moodboard) return;
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm("Are you sure you want to remove this image from the moodboard?");
+    if (!confirmed) return;
+
     try {
-      const newImageIds = moodboard.savedImageIds.filter(id => id !== imageId);
-      await reorderMoodboardImages(moodboard.id, newImageIds);
-      setImages(prev => prev.filter(img => img.id !== imageId));
-      setMoodboard(prev => prev ? { ...prev, savedImageIds: newImageIds } : null);
+      // Call API to remove the saved image from the moodboard
+      const updatedMoodboard = await removeSavedImageFromMoodboard(moodboard.id, savedImageId);
+      
+      // Update local state
+      setImages(prev => prev.filter(img => img.id !== savedImageId));
+      setMoodboard(updatedMoodboard);
     } catch (err) {
-      console.error(err);
+      console.error("Error removing image:", err);
+      alert("Failed to remove image from moodboard");
     }
   };
 
@@ -291,42 +305,65 @@ export default function MoodboardViewPage() {
           <div className="text-center py-20">
             <p className="text-muted-foreground">No images in this moodboard</p>
           </div>
-        ) : organizeMode ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={images.map((img) => img.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {images.map((img) => (
-                  <SortableImageItem
-                    key={img.id}
-                    img={img}
-                    onRemove={handleRemoveImage}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
         ) : (
-          <ResponsiveMasonry
-            columnsCountBreakPoints={{
-              0: 2,
-              768: 3,
-              1024: 4,
-              1280: 5
-            }}
-          >
-            <Masonry gutter="24px">
-              {images.map((img) => (
-                <SavedImageCard key={img.id} img={img} />
-              ))}
-            </Masonry>
-          </ResponsiveMasonry>
+          <>
+            {/* Organize Mode Banner */}
+            {organizeMode && (
+              <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <GripVertical className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Organize Mode Active
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Drag to reorder • Click trash icon to remove images
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {organizeMode ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                autoScroll={false}
+              >
+                <SortableContext
+                  items={images.map((img) => img.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {images.map((img) => (
+                      <SortableImageItem
+                        key={img.id}
+                        img={img}
+                        onRemove={handleRemoveImage}
+                        organizeMode={organizeMode}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <ResponsiveMasonry
+                columnsCountBreakPoints={{
+                  0: 2,
+                  768: 3,
+                  1024: 4,
+                  1280: 5
+                }}
+              >
+                <Masonry gutter="24px">
+                  {images.map((img) => (
+                    <SavedImageCard key={img.id} img={img} />
+                  ))}
+                </Masonry>
+              </ResponsiveMasonry>
+            )}
+          </>
         )}
       </main>
 
